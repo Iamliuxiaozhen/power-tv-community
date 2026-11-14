@@ -1,5 +1,11 @@
 export default defineNuxtConfig({
-  modules: ['@nuxt/eslint', 'nitro-cloudflare-dev', 'nuxt-auth-utils'],
+  modules: ['@nuxt/eslint', '@nuxt/icon', 'nitro-cloudflare-dev', 'nuxt-auth-utils'],
+  css: ['@fontsource-variable/roboto', '~/assets/css/main.css'],
+  icon: {
+    serverBundle: {
+      collections: ['material-symbols'],
+    },
+  },
   devtools: { enabled: false },
   runtimeConfig: {
     appUrl: 'http://localhost:3000',
