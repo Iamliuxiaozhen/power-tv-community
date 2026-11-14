@@ -1,3 +1,4 @@
+import type { DashboardStats } from '#shared/community'
 import { toThemeSummary, type ThemeWithOwnerRow } from './types'
 
 type Reaction = 'likes' | 'favorites'
@@ -42,6 +43,29 @@ export async function listReactedThemes(db: D1Database, userId: number, reaction
     WHERE r.user_id = ? ORDER BY r.created_at DESC, t.id DESC LIMIT 100
   `).bind(userId).all<ThemeWithOwnerRow>()
   return result.results.map(toThemeSummary)
+}
+
+export async function getDashboardStats(db: D1Database, userId: number): Promise<DashboardStats> {
+  const [owned, favorites] = await db.batch([
+    db.prepare(`
+      SELECT COUNT(*) AS themes, COALESCE(SUM(downloads), 0) AS downloads,
+        COALESCE(SUM(likes), 0) AS likes
+      FROM themes WHERE owner_id = ? AND status != 'deleted'
+    `).bind(userId),
+    db.prepare(`
+      SELECT COUNT(*) AS favorites FROM favorites f
+      JOIN themes t ON t.id = f.theme_id AND t.status = 'published'
+      WHERE f.user_id = ?
+    `).bind(userId),
+  ])
+  const totals = owned?.results[0] as { themes: number, downloads: number, likes: number } | undefined
+  const favoriteTotal = favorites?.results[0] as { favorites: number } | undefined
+  return {
+    themes: Number(totals?.themes ?? 0),
+    favorites: Number(favoriteTotal?.favorites ?? 0),
+    downloads: Number(totals?.downloads ?? 0),
+    likes: Number(totals?.likes ?? 0),
+  }
 }
 
 export async function listComments(db: D1Database, themeId: string, cursor?: string, limit = 30) {

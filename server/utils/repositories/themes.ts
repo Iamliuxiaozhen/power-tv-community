@@ -43,6 +43,7 @@ async function queryThemes(db: D1Database, options: ThemeListOptions, ownerId?: 
   const bindings: (string | number)[] = []
 
   if (!includeUnpublished) conditions.push(`t.status = 'published'`)
+  else if (ownerId !== undefined) conditions.push(`t.status != 'deleted'`)
   if (ownerId !== undefined) {
     conditions.push('t.owner_id = ?')
     bindings.push(ownerId)

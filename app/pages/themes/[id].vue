@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { ThemeDetailResponse } from '#shared/community'
+import type { ThemeDetailResponse, ThemeReactionResponse } from '#shared/community'
 
 const route = useRoute()
-const { user } = useAuth()
+const { loggedIn, loginUrl, user } = useAuth()
 const { showSnackbar } = useSnackbar()
 const themeId = computed(() => String(route.params.id))
 const { data, pending, error, refresh } = await useAsyncData(
@@ -37,6 +37,44 @@ useHead({
 })
 
 const isOwner = computed(() => Boolean(data.value && user.value?.githubId === data.value.theme.owner.githubId))
+const liked = ref(false)
+const favorited = ref(false)
+const likeCount = ref(0)
+const reactionPending = ref<'like' | 'favorite' | null>(null)
+watch(() => data.value, (value) => {
+  liked.value = value?.viewer.liked ?? false
+  favorited.value = value?.viewer.favorited ?? false
+  likeCount.value = value?.theme.likes ?? 0
+}, { immediate: true })
+
+async function toggleReaction(reaction: 'like' | 'favorite'): Promise<void> {
+  if (!loggedIn.value) {
+    window.location.assign(loginUrl())
+    return
+  }
+  if (reactionPending.value) return
+  const active = reaction === 'like' ? !liked.value : !favorited.value
+  reactionPending.value = reaction
+  try {
+    const result = await $fetch<ThemeReactionResponse>(`/api/themes/${encodeURIComponent(themeId.value)}/reactions`, {
+      method: 'PUT',
+      body: { reaction, active },
+    })
+    liked.value = result.liked
+    favorited.value = result.favorited
+    likeCount.value = result.likes
+    showSnackbar(reaction === 'like'
+      ? active ? '已点赞' : '已取消点赞'
+      : active ? '已加入收藏' : '已移出收藏')
+  }
+  catch {
+    showSnackbar('操作失败，请检查登录状态和网络连接后重试。')
+  }
+  finally {
+    reactionPending.value = null
+  }
+}
+
 const deleteOpen = ref(false)
 const deleting = ref(false)
 const deleteError = ref('')
@@ -103,7 +141,7 @@ function assetUrl(kind: 'preview' | 'backdrop'): string {
               <span>由 <strong>{{ data.theme.owner.displayName || data.theme.owner.login }}</strong> 发布</span>
             </NuxtLink>
             <span><Icon name="material-symbols:download" size="18" /> {{ data.theme.downloads }} 次下载</span>
-            <span><Icon name="material-symbols:favorite-outline" size="18" /> {{ data.theme.likes }} 个点赞</span>
+            <span><Icon name="material-symbols:favorite-outline" size="18" /> {{ likeCount }} 个点赞</span>
           </div>
         </div>
         <div class="detail-primary-action">
@@ -111,6 +149,30 @@ function assetUrl(kind: 'preview' | 'backdrop'): string {
             <Icon name="material-symbols:download" size="21" />
             {{ selectedVersion.version === data.theme.version ? '下载最新版' : `下载 v${selectedVersion.version}` }}
           </a>
+          <div class="detail-reactions" aria-label="主题互动">
+            <button
+              type="button"
+              class="button button--tonal"
+              :class="{ 'is-active': liked }"
+              :aria-pressed="liked"
+              :disabled="reactionPending !== null"
+              @click="toggleReaction('like')"
+            >
+              <Icon :name="liked ? 'material-symbols:favorite' : 'material-symbols:favorite-outline'" size="19" />
+              {{ liked ? '已点赞' : '点赞' }} {{ likeCount }}
+            </button>
+            <button
+              type="button"
+              class="button button--tonal"
+              :class="{ 'is-active': favorited }"
+              :aria-pressed="favorited"
+              :disabled="reactionPending !== null"
+              @click="toggleReaction('favorite')"
+            >
+              <Icon :name="favorited ? 'material-symbols:bookmark' : 'material-symbols:bookmark-outline'" size="19" />
+              {{ favorited ? '已收藏' : '收藏' }}
+            </button>
+          </div>
           <span>适用于 power-tv {{ selectedVersion.metadata.minAppVersion ?? '1.5.0' }} 及以上版本</span>
         </div>
       </header>
@@ -324,6 +386,24 @@ function assetUrl(kind: 'preview' | 'backdrop'): string {
 .detail-primary-action {
   width: 250px;
   flex: 0 0 auto;
+}
+
+.detail-reactions {
+  display: grid;
+  margin-top: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.detail-reactions .button {
+  min-height: 40px;
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+.detail-reactions .button.is-active {
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
 }
 
 .detail-primary-action > span {

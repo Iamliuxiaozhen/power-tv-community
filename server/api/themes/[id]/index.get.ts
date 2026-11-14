@@ -6,9 +6,13 @@ export default defineEventHandler(async (event): Promise<ThemeDetailResponse> =>
   const db = getDatabase(event)
   const theme = await getThemeRecord(db, themeId)
   if (!theme) throw createError({ statusCode: 404, statusMessage: 'Theme not found' })
+  const session = await getUserSession(event)
 
   return {
     theme: toThemeSummary(theme),
     versions: await listThemeVersions(db, themeId),
+    viewer: session.user
+      ? await getReactionState(db, session.user.githubId, themeId)
+      : { liked: false, favorited: false },
   }
 })

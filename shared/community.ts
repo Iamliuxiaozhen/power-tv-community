@@ -38,9 +38,19 @@ export interface ThemeVersionSummary {
   hasBackdrop: boolean
 }
 
+export interface ThemeReactionState {
+  liked: boolean
+  favorited: boolean
+}
+
+export interface ThemeReactionResponse extends ThemeReactionState {
+  likes: number
+}
+
 export interface ThemeDetailResponse {
   theme: ThemeSummary
   versions: ThemeVersionSummary[]
+  viewer: ThemeReactionState
 }
 
 export interface PublishThemeResponse {
@@ -59,4 +69,17 @@ export interface PublicUser extends CommunityUser {
 
 export interface UserThemesResponse extends ThemeListResponse {
   user: PublicUser
+}
+
+export interface DashboardStats {
+  themes: number
+  favorites: number
+  downloads: number
+  likes: number
+}
+
+export interface DashboardResponse {
+  themes: ThemeListResponse
+  favorites: ThemeSummary[]
+  stats: DashboardStats
 }
