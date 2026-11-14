@@ -1,5 +1,5 @@
 export default defineNuxtConfig({
-  modules: ['@nuxt/eslint'],
+  modules: ['@nuxt/eslint', 'nitro-cloudflare-dev'],
   devtools: { enabled: false },
   compatibilityDate: '2026-11-14',
   nitro: {
