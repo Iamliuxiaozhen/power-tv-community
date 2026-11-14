@@ -2,6 +2,8 @@
 import type { ThemeDetailResponse } from '#shared/community'
 
 const route = useRoute()
+const { user } = useAuth()
+const { showSnackbar } = useSnackbar()
 const themeId = computed(() => String(route.params.id))
 const { data, pending, error, refresh } = await useAsyncData(
   'theme-details',
@@ -33,6 +35,29 @@ useHead({
   title: computed(() => data.value?.theme.name ?? '主题详情'),
   meta: computed(() => [{ name: 'description', content: data.value?.theme.description || '下载 power-tv 社区主题。' }]),
 })
+
+const isOwner = computed(() => Boolean(data.value && user.value?.githubId === data.value.theme.owner.githubId))
+const deleteOpen = ref(false)
+const deleting = ref(false)
+const deleteError = ref('')
+
+async function deleteTheme(): Promise<void> {
+  if (deleting.value) return
+  deleting.value = true
+  deleteError.value = ''
+  try {
+    await $fetch(`/api/themes/${encodeURIComponent(themeId.value)}`, { method: 'DELETE' })
+    deleteOpen.value = false
+    showSnackbar('主题已删除，不再公开展示或下载。')
+    await navigateTo('/themes')
+  }
+  catch {
+    deleteError.value = '删除失败，请检查登录状态和网络连接后重试。'
+  }
+  finally {
+    deleting.value = false
+  }
+}
 
 function assetUrl(kind: 'preview' | 'backdrop'): string {
   return `/api/themes/${encodeURIComponent(themeId.value)}/versions/${encodeURIComponent(selectedVersion.value!.version)}/assets/${kind}`
@@ -89,6 +114,21 @@ function assetUrl(kind: 'preview' | 'backdrop'): string {
           <span>适用于 power-tv {{ selectedVersion.metadata.minAppVersion ?? '1.5.0' }} 及以上版本</span>
         </div>
       </header>
+
+      <section v-if="isOwner" class="owner-actions" aria-label="作者管理">
+        <div>
+          <Icon name="material-symbols:admin-panel-settings-outline" size="23" />
+          <span><strong>作者管理</strong><small>发布新版本，或从社区删除此主题。</small></span>
+        </div>
+        <div class="owner-actions__buttons">
+          <NuxtLink :to="`/upload/${encodeURIComponent(data.theme.id)}`" class="button button--tonal button--small">
+            <Icon name="material-symbols:upload" size="19" /> 上传新版本
+          </NuxtLink>
+          <button type="button" class="button button--outlined button--small owner-delete" @click="deleteOpen = true; deleteError = ''">
+            <Icon name="material-symbols:delete-outline" size="19" /> 删除主题
+          </button>
+        </div>
+      </section>
 
       <div v-if="selectedVersion.version !== data.theme.version" class="history-notice" role="status">
         <Icon name="material-symbols:history" size="22" />
@@ -157,6 +197,21 @@ function assetUrl(kind: 'preview' | 'backdrop'): string {
         :latest-version="data.theme.version"
         :selected-version="selectedVersion.version"
       />
+
+      <AppDialog
+        v-model:open="deleteOpen"
+        title="删除这个主题？"
+        :description="`${data.theme.name} (${data.theme.id}) 将从公开目录移除。`"
+      >
+        <p class="delete-confirmation">删除后，主题详情、所有历史版本和下载入口将不再公开。此操作不会删除你的 GitHub 账号。</p>
+        <p v-if="deleteError" class="delete-error" role="alert">{{ deleteError }}</p>
+        <template #actions>
+          <button type="button" class="button button--text" :disabled="deleting" @click="deleteOpen = false">取消</button>
+          <button type="button" class="button button--danger" :disabled="deleting" @click="deleteTheme">
+            <Icon name="material-symbols:delete-outline" size="19" /> {{ deleting ? '正在删除…' : '确认删除' }}
+          </button>
+        </template>
+      </AppDialog>
     </template>
   </div>
 </template>
@@ -278,6 +333,68 @@ function assetUrl(kind: 'preview' | 'backdrop'): string {
   font-size: 11px;
   line-height: 1.5;
   text-align: center;
+}
+
+.owner-actions {
+  display: flex;
+  margin: -12px 0 28px;
+  padding: 16px 18px;
+  border: 1px solid var(--md-outline-variant);
+  border-radius: var(--md-radius-large);
+  align-items: center;
+  justify-content: space-between;
+  background: var(--md-surface-container-low);
+  gap: 20px;
+}
+
+.owner-actions > div:first-child,
+.owner-actions > div:first-child > span {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.owner-actions > div:first-child > .icon {
+  color: var(--md-primary);
+  flex: 0 0 auto;
+}
+
+.owner-actions > div:first-child > span {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.owner-actions strong {
+  font-size: 14px;
+}
+
+.owner-actions small {
+  color: var(--md-on-surface-variant);
+  font-size: 12px;
+}
+
+.owner-actions__buttons {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 8px;
+}
+
+.owner-delete {
+  color: var(--md-error);
+}
+
+.delete-confirmation {
+  margin-bottom: 0;
+  color: var(--md-on-surface-variant);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.delete-error {
+  margin: 14px 0 0;
+  color: var(--md-error);
+  font-size: 13px;
 }
 
 .history-notice {
@@ -558,6 +675,16 @@ function assetUrl(kind: 'preview' | 'backdrop'): string {
 }
 
 @media (max-width: 760px) {
+  .owner-actions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .owner-actions__buttons {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
   .detail-layout,
   .detail-loading {
     grid-template-columns: 1fr;

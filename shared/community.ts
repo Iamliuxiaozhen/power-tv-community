@@ -43,6 +43,11 @@ export interface ThemeDetailResponse {
   versions: ThemeVersionSummary[]
 }
 
+export interface PublishThemeResponse {
+  themeId: string
+  version: string
+}
+
 export interface ThemeListResponse {
   items: ThemeSummary[]
   nextCursor: string | null
