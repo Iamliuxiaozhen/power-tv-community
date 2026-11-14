@@ -1,3 +1,4 @@
+import type { ThemeSummary, ThemeVersionSummary } from '#shared/community'
 import type { NormalizedThemeManifest } from '#shared/theme/types'
 
 export interface ThemeRow {
@@ -50,7 +51,7 @@ export interface VersionRow {
   created_at: string
 }
 
-export function toThemeSummary(row: ThemeWithOwnerRow) {
+export function toThemeSummary(row: ThemeWithOwnerRow): ThemeSummary {
   return {
     id: row.id,
     name: row.name,
@@ -77,7 +78,7 @@ export function toThemeSummary(row: ThemeWithOwnerRow) {
   }
 }
 
-export function toVersionSummary(row: VersionRow) {
+export function toVersionSummary(row: VersionRow): ThemeVersionSummary {
   return {
     version: row.version,
     fileName: row.original_filename,

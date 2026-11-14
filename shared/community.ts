@@ -1,3 +1,5 @@
+import type { NormalizedThemeManifest } from './theme/types'
+
 export interface CommunityUser {
   githubId: number
   login: string
@@ -23,6 +25,22 @@ export interface ThemeSummary {
   status: 'published' | 'hidden' | 'deleted'
   createdAt: string
   updatedAt: string
+}
+
+export interface ThemeVersionSummary {
+  version: string
+  fileName: string
+  sha256: string
+  byteSize: number
+  createdAt: string
+  metadata: NormalizedThemeManifest
+  hasPreview: boolean
+  hasBackdrop: boolean
+}
+
+export interface ThemeDetailResponse {
+  theme: ThemeSummary
+  versions: ThemeVersionSummary[]
 }
 
 export interface ThemeListResponse {

@@ -34,3 +34,21 @@ export function isAllowedOrigin(origin: string | undefined, allowedOrigins: stri
     return false
   }
 }
+
+export function safeDownloadFileName(value: string): string {
+  const leaf = value.split(/[\\/]/).at(-1) ?? ''
+  const cleaned = Array.from(leaf, character =>
+    hasControlCharacters(character) || character === '"' || character === '\\' ? '_' : character)
+    .join('')
+    .trim()
+    .replace(/^\.+/, '')
+  return Array.from(cleaned).slice(0, 180).join('') || 'theme.ptheme'
+}
+
+export function contentDisposition(value: string, disposition: 'attachment' | 'inline' = 'attachment'): string {
+  const fileName = safeDownloadFileName(value)
+  const asciiName = fileName.replace(/[^\x20-\x7E]/g, '_')
+  const encodedName = encodeURIComponent(fileName).replace(/['()*]/g, character =>
+    `%${character.charCodeAt(0).toString(16).toUpperCase()}`)
+  return `${disposition}; filename="${asciiName}"; filename*=UTF-8''${encodedName}`
+}

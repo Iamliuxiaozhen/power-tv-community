@@ -81,7 +81,7 @@ export async function getThemeRecord(db: D1Database, id: string, includeUnpublis
 export async function listThemeVersions(db: D1Database, themeId: string) {
   const result = await db.prepare('SELECT * FROM theme_versions WHERE theme_id = ? ORDER BY created_at DESC, version DESC')
     .bind(themeId).all<VersionRow>()
-  return result.results.map(toVersionSummary)
+  return result.results.map(toVersionSummary).sort((left, right) => compareVersions(right.version, left.version))
 }
 
 export async function getVersionRecord(db: D1Database, themeId: string, version: string): Promise<VersionRow | null> {

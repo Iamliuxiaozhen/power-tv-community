@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isAllowedOrigin, safeReturnTo } from '#shared/security'
+import { contentDisposition, isAllowedOrigin, safeDownloadFileName, safeReturnTo } from '#shared/security'
 
 describe('safeReturnTo', () => {
   it.each([
@@ -23,5 +23,25 @@ describe('isAllowedOrigin', () => {
     expect(isAllowedOrigin('https://community.example/path', ['https://community.example'])).toBe(false)
     expect(isAllowedOrigin('null', ['https://community.example'])).toBe(false)
     expect(isAllowedOrigin(undefined, ['https://community.example'])).toBe(false)
+  })
+})
+
+describe('download file names', () => {
+  it.each([
+    ['../../aurora.ptheme', 'aurora.ptheme'],
+    ['..\\aurora.ptheme', 'aurora.ptheme'],
+    ['bad\r\n"name.ptheme', 'bad___name.ptheme'],
+    ['...', 'theme.ptheme'],
+  ])('sanitizes %j', (input, expected) => {
+    expect(safeDownloadFileName(input)).toBe(expected)
+  })
+
+  it('creates an ASCII fallback and UTF-8 filename', () => {
+    expect(contentDisposition('深色.ptheme')).toBe(
+      'attachment; filename="__.ptheme"; filename*=UTF-8\'\'%E6%B7%B1%E8%89%B2.ptheme',
+    )
+    expect(contentDisposition('aurora.ptheme', 'inline')).toBe(
+      'inline; filename="aurora.ptheme"; filename*=UTF-8\'\'aurora.ptheme',
+    )
   })
 })
