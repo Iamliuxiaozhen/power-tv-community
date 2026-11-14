@@ -1,0 +1,14 @@
+node_modules/
+.nuxt/
+.output/
+.data/
+dist/
+.wrangler/
+coverage/
+.env
+.env.*
+!.env.example
+.dev.vars
+*.log
+.DS_Store
+.trae/
