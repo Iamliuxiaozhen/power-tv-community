@@ -47,7 +47,7 @@ npm run dev
 
 ### D1
 
-迁移文件位于 `migrations/`。`wrangler.jsonc` 中的 `database_id` 是占位值，部署者需要替换为自己创建的 D1 数据库 ID。
+迁移文件位于 `migrations/`，绑定配置位于 `wrangler.toml`。部署前请确认其中的 `database_id` 与自己的 D1 数据库一致。
 
 ```bash
 # 本地 D1 应用迁移

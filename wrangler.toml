@@ -1,0 +1,19 @@
+name = "power-tv-community"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-11-14"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+NUXT_APP_URL = "https://community.power-tv.liuxiaozhen.dev"
+NUXT_OAUTH_GITHUB_CLIENT_ID = "Ov23liipqLJ12Lkikp1e"
+ADMIN_GITHUB_IDS = "149680880"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "power-tv-community"
+database_id = "759288a8-26ae-4665-a30b-0b485ddb7a45"
+migrations_dir = "migrations"
+
+[[r2_buckets]]
+binding = "THEME_BUCKET"
+bucket_name = "power-tv-themes"
