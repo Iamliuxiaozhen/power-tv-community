@@ -19,6 +19,7 @@ const { colorModes, mode, selected } = useColorMode()
       <nav class="desktop-navigation" aria-label="主要导航">
         <NuxtLink to="/" exact-active-class="is-active">首页</NuxtLink>
         <NuxtLink to="/themes" active-class="is-active">浏览主题</NuxtLink>
+        <NuxtLink to="/guide" active-class="is-active">制作指南</NuxtLink>
         <NuxtLink to="/upload" active-class="is-active">发布主题</NuxtLink>
       </nav>
 

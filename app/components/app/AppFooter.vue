@@ -11,6 +11,7 @@
         </div>
       </div>
       <nav class="app-footer__links" aria-label="相关链接">
+        <NuxtLink to="/guide">主题制作指南</NuxtLink>
         <a href="https://power-tv.liuxiaozhen.dev" target="_blank" rel="noreferrer">power-tv 官网</a>
         <a href="https://github.com/Iamliuxiaozhen/power-tv" target="_blank" rel="noreferrer">应用源码</a>
         <a href="https://github.com/Iamliuxiaozhen/power-tv-community" target="_blank" rel="noreferrer">社区源码</a>
