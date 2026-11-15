@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ThemeDetailResponse, ThemeReactionResponse } from '#shared/community'
 
+const { t } = useI18n()
 const route = useRoute()
 const { loggedIn, loginUrl, user } = useAuth()
 const { showSnackbar } = useSnackbar()
@@ -27,14 +28,14 @@ const downloadUrl = computed(() => {
 const colorGroups = computed(() => {
   const schemes = selectedVersion.value?.metadata.schemes
   if (!schemes) return []
-  const groups = [{ key: 'light', label: '浅色方案', colors: schemes.light }]
-  if (schemes.dark) groups.push({ key: 'dark', label: '深色方案', colors: schemes.dark })
+  const groups = [{ key: 'light', label: t('themeDetail.lightScheme'), colors: schemes.light }]
+  if (schemes.dark) groups.push({ key: 'dark', label: t('themeDetail.darkScheme'), colors: schemes.dark })
   return groups.map(group => ({ ...group, entries: Object.entries(group.colors) }))
 })
 
 useHead({
-  title: computed(() => data.value?.theme.name ?? '主题详情'),
-  meta: computed(() => [{ name: 'description', content: data.value?.theme.description || '下载 power-tv 社区主题。' }]),
+  title: computed(() => data.value?.theme.name ?? t('themeDetail.metaTitle')),
+  meta: computed(() => [{ name: 'description', content: data.value?.theme.description || t('themeDetail.metaDescription') }]),
 })
 
 const isOwner = computed(() => Boolean(data.value && user.value?.githubId === data.value.theme.owner.githubId))
@@ -65,11 +66,11 @@ async function toggleReaction(reaction: 'like' | 'favorite'): Promise<void> {
     favorited.value = result.favorited
     likeCount.value = result.likes
     showSnackbar(reaction === 'like'
-      ? active ? '已点赞' : '已取消点赞'
-      : active ? '已加入收藏' : '已移出收藏')
+      ? active ? t('themeDetail.likeAdded') : t('themeDetail.likeRemoved')
+      : active ? t('themeDetail.favoriteAdded') : t('themeDetail.favoriteRemoved'))
   }
   catch {
-    showSnackbar('操作失败，请检查登录状态和网络连接后重试。')
+    showSnackbar(t('themeDetail.reactionError'))
   }
   finally {
     reactionPending.value = null
@@ -87,11 +88,11 @@ async function deleteTheme(): Promise<void> {
   try {
     await $fetch(`/api/themes/${encodeURIComponent(themeId.value)}`, { method: 'DELETE' })
     deleteOpen.value = false
-    showSnackbar('主题已删除，不再公开展示或下载。')
+    showSnackbar(t('themeDetail.deleteSuccess'))
     await navigateTo('/themes')
   }
   catch {
-    deleteError.value = '删除失败，请检查登录状态和网络连接后重试。'
+    deleteError.value = t('themeDetail.deleteError')
   }
   finally {
     deleting.value = false
@@ -105,7 +106,7 @@ function assetUrl(kind: 'preview' | 'backdrop'): string {
 
 <template>
   <div class="theme-detail-page">
-    <div v-if="pending && !data" class="detail-loading" aria-label="正在加载主题">
+    <div v-if="pending && !data" class="detail-loading" :aria-label="t('themeDetail.loading')">
       <div class="detail-loading__heading skeleton" />
       <div class="detail-loading__preview skeleton" />
       <div class="detail-loading__aside skeleton" />
@@ -113,44 +114,44 @@ function assetUrl(kind: 'preview' | 'backdrop'): string {
     <AppEmptyState
       v-else-if="error && !data"
       :icon="error.statusCode === 404 ? 'material-symbols:search-off' : 'material-symbols:cloud-off'"
-      :title="error.statusCode === 404 ? '主题不可用' : '主题加载失败'"
-      :description="error.statusCode === 404 ? '主题可能不存在、已隐藏或已删除。' : '暂时无法读取主题信息，请稍后重试。'"
+      :title="error.statusCode === 404 ? t('themeDetail.notFoundTitle') : t('themeDetail.loadErrorTitle')"
+      :description="error.statusCode === 404 ? t('themeDetail.notFoundDescription') : t('themeDetail.loadErrorDescription')"
     >
-      <button v-if="error.statusCode !== 404" type="button" class="button button--tonal" @click="refresh()">重试</button>
-      <NuxtLink to="/themes" class="button button--outlined">返回主题目录</NuxtLink>
+      <button v-if="error.statusCode !== 404" type="button" class="button button--tonal" @click="refresh()">{{ t('common.retry') }}</button>
+      <NuxtLink to="/themes" class="button button--outlined">{{ t('themeDetail.backToCatalog') }}</NuxtLink>
     </AppEmptyState>
 
     <template v-else-if="data && selectedVersion">
-      <nav class="detail-breadcrumb" aria-label="面包屑">
-        <NuxtLink to="/themes"><Icon name="material-symbols:arrow-back" size="18" /> 主题目录</NuxtLink>
+      <nav class="detail-breadcrumb" :aria-label="t('themeDetail.breadcrumb')">
+        <NuxtLink to="/themes"><Icon name="material-symbols:arrow-back" size="18" /> {{ t('themeDetail.backToCatalog') }}</NuxtLink>
         <span>/</span>
         <span>{{ data.theme.id }}</span>
       </nav>
 
       <header class="detail-header">
         <div class="detail-heading">
-          <p class="eyebrow">POWER-TV THEME</p>
+          <p class="eyebrow">{{ t('themeDetail.eyebrow') }}</p>
           <div class="detail-title">
             <h1>{{ data.theme.name }}</h1>
             <span class="badge">v{{ data.theme.version }}</span>
           </div>
           <p class="detail-id">{{ data.theme.id }}</p>
-          <p class="detail-description">{{ data.theme.description || '这个主题还没有添加描述。' }}</p>
+          <p class="detail-description">{{ data.theme.description || t('themeDetail.noDescription') }}</p>
           <div class="detail-byline">
             <NuxtLink :to="`/users/${encodeURIComponent(data.theme.owner.login)}`">
               <img :src="data.theme.owner.avatarUrl" alt="" width="32" height="32">
-              <span>由 <strong>{{ data.theme.owner.displayName || data.theme.owner.login }}</strong> 发布</span>
+              <span>{{ t('themeDetail.publishedByPrefix') }} <strong>{{ data.theme.owner.displayName || data.theme.owner.login }}</strong> {{ t('themeDetail.publishedBySuffix') }}</span>
             </NuxtLink>
-            <span><Icon name="material-symbols:download" size="18" /> {{ data.theme.downloads }} 次下载</span>
-            <span><Icon name="material-symbols:favorite-outline" size="18" /> {{ likeCount }} 个点赞</span>
+            <span><Icon name="material-symbols:download" size="18" /> {{ t('themeDetail.downloadCount', { count: data.theme.downloads }) }}</span>
+            <span><Icon name="material-symbols:favorite-outline" size="18" /> {{ t('themeDetail.likeCount', { count: likeCount }) }}</span>
           </div>
         </div>
         <div class="detail-primary-action">
           <a :href="downloadUrl" class="button button--wide">
             <Icon name="material-symbols:download" size="21" />
-            {{ selectedVersion.version === data.theme.version ? '下载最新版' : `下载 v${selectedVersion.version}` }}
+            {{ selectedVersion.version === data.theme.version ? t('themeDetail.downloadLatest') : t('themeDetail.downloadVersion', { version: selectedVersion.version }) }}
           </a>
-          <div class="detail-reactions" aria-label="主题互动">
+          <div class="detail-reactions" :aria-label="t('themeDetail.reactions')">
             <button
               type="button"
               class="button button--tonal"
@@ -160,7 +161,7 @@ function assetUrl(kind: 'preview' | 'backdrop'): string {
               @click="toggleReaction('like')"
             >
               <Icon :name="liked ? 'material-symbols:favorite' : 'material-symbols:favorite-outline'" size="19" />
-              {{ liked ? '已点赞' : '点赞' }} {{ likeCount }}
+              {{ liked ? t('themeDetail.liked') : t('themeDetail.like') }} {{ likeCount }}
             </button>
             <button
               type="button"
@@ -171,34 +172,34 @@ function assetUrl(kind: 'preview' | 'backdrop'): string {
               @click="toggleReaction('favorite')"
             >
               <Icon :name="favorited ? 'material-symbols:bookmark' : 'material-symbols:bookmark-outline'" size="19" />
-              {{ favorited ? '已收藏' : '收藏' }}
+              {{ favorited ? t('themeDetail.favorited') : t('themeDetail.favorite') }}
             </button>
           </div>
           <div class="detail-report">
             <ModerationReportButton target-type="theme" :target-id="data.theme.id" />
           </div>
-          <span>适用于 power-tv {{ selectedVersion.metadata.minAppVersion ?? '1.5.0' }} 及以上版本</span>
+          <span>{{ t('themeDetail.minAppVersion', { version: selectedVersion.metadata.minAppVersion ?? '1.5.0' }) }}</span>
         </div>
       </header>
 
-      <section v-if="isOwner" class="owner-actions" aria-label="作者管理">
+      <section v-if="isOwner" class="owner-actions" :aria-label="t('themeDetail.ownerActions')">
         <div>
           <Icon name="material-symbols:admin-panel-settings-outline" size="23" />
-          <span><strong>作者管理</strong><small>发布新版本，或从社区删除此主题。</small></span>
+          <span><strong>{{ t('themeDetail.ownerActions') }}</strong><small>{{ t('themeDetail.ownerDescription') }}</small></span>
         </div>
         <div class="owner-actions__buttons">
           <NuxtLink :to="`/upload/${encodeURIComponent(data.theme.id)}`" class="button button--tonal button--small">
-            <Icon name="material-symbols:upload" size="19" /> 上传新版本
+            <Icon name="material-symbols:upload" size="19" /> {{ t('themeDetail.uploadVersion') }}
           </NuxtLink>
           <button type="button" class="button button--outlined button--small owner-delete" @click="deleteOpen = true; deleteError = ''">
-            <Icon name="material-symbols:delete-outline" size="19" /> 删除主题
+            <Icon name="material-symbols:delete-outline" size="19" /> {{ t('themeDetail.deleteTheme') }}
           </button>
         </div>
       </section>
 
       <div v-if="selectedVersion.version !== data.theme.version" class="history-notice" role="status">
         <Icon name="material-symbols:history" size="22" />
-        <div>正在查看历史版本 <strong>v{{ selectedVersion.version }}</strong>。<NuxtLink :to="{ query: {} }">返回最新版 v{{ data.theme.version }}</NuxtLink></div>
+        <div>{{ t('themeDetail.historyNoticePrefix') }} <strong>v{{ selectedVersion.version }}</strong>{{ t('themeDetail.historyNoticeSuffix') }}<NuxtLink :to="{ query: {} }">{{ t('themeDetail.backToLatest', { version: data.theme.version }) }}</NuxtLink></div>
       </div>
 
       <div class="detail-layout">
@@ -207,14 +208,14 @@ function assetUrl(kind: 'preview' | 'backdrop'): string {
 
           <section v-if="selectedVersion.hasPreview" class="package-preview">
             <div class="section-heading">
-              <div><h2>主题包预览图</h2><p>由创作者随主题包提供的原始预览。</p></div>
+              <div><h2>{{ t('themeDetail.packagePreviewTitle') }}</h2><p>{{ t('themeDetail.packagePreviewDescription') }}</p></div>
             </div>
-            <img :src="assetUrl('preview')" :alt="`${data.theme.name} v${selectedVersion.version} 的主题包预览`" loading="lazy">
+            <img :src="assetUrl('preview')" :alt="t('themeDetail.packagePreviewAlt', { name: data.theme.name, version: selectedVersion.version })" loading="lazy">
           </section>
 
           <section class="color-section" aria-labelledby="colors-heading">
             <div class="section-heading">
-              <div><h2 id="colors-heading">主题配色</h2><p>主题包中声明的 Material Design 颜色角色。</p></div>
+              <div><h2 id="colors-heading">{{ t('themeDetail.colorsTitle') }}</h2><p>{{ t('themeDetail.colorsDescription') }}</p></div>
             </div>
             <div class="color-groups">
               <article v-for="group in colorGroups" :key="group.key" class="color-group card">
@@ -230,28 +231,28 @@ function assetUrl(kind: 'preview' | 'backdrop'): string {
           </section>
         </div>
 
-        <aside class="detail-sidebar" aria-label="版本文件信息">
+        <aside class="detail-sidebar" :aria-label="t('themeDetail.releaseInfo')">
           <section class="release-card card">
             <div class="release-card__heading">
               <span><Icon name="material-symbols:deployed-code-outline" size="24" /></span>
-              <div><p>当前查看版本</p><h2>v{{ selectedVersion.version }}</h2></div>
+              <div><p>{{ t('themeDetail.currentVersion') }}</p><h2>v{{ selectedVersion.version }}</h2></div>
             </div>
             <dl class="release-facts">
-              <div><dt>文件名称</dt><dd>{{ selectedVersion.fileName }}</dd></div>
-              <div><dt>文件大小</dt><dd>{{ formatByteSize(selectedVersion.byteSize) }}</dd></div>
-              <div><dt>最低 App 版本</dt><dd>{{ selectedVersion.metadata.minAppVersion ?? '1.5.0' }}</dd></div>
+              <div><dt>{{ t('themeDetail.fileName') }}</dt><dd>{{ selectedVersion.fileName }}</dd></div>
+              <div><dt>{{ t('themeDetail.fileSize') }}</dt><dd>{{ formatByteSize(selectedVersion.byteSize) }}</dd></div>
+              <div><dt>{{ t('themeDetail.minAppVersionLabel') }}</dt><dd>{{ selectedVersion.metadata.minAppVersion ?? '1.5.0' }}</dd></div>
               <div><dt>Schema</dt><dd>v{{ selectedVersion.metadata.schemaVersion }}</dd></div>
-              <div><dt>发布时间</dt><dd>{{ formatDate(selectedVersion.createdAt) }}</dd></div>
+              <div><dt>{{ t('themeDetail.publishedAt') }}</dt><dd>{{ formatDate(selectedVersion.createdAt) }}</dd></div>
             </dl>
             <div class="release-hash">
               <span><Icon name="material-symbols:verified-user-outline" size="17" /> SHA-256</span>
               <code>{{ selectedVersion.sha256 }}</code>
             </div>
-            <p class="release-immutable"><Icon name="material-symbols:lock-outline" size="17" /> 此版本文件不可变，下载前可核对摘要。</p>
+            <p class="release-immutable"><Icon name="material-symbols:lock-outline" size="17" /> {{ t('themeDetail.immutable') }}</p>
           </section>
           <a href="https://github.com/Iamliuxiaozhen/power-tv/blob/main/docs/theme-packs.md" target="_blank" rel="noreferrer" class="install-guide">
             <Icon name="material-symbols:menu-book-outline" size="22" />
-            <span><strong>如何安装主题？</strong><small>查看 power-tv 主题使用指南</small></span>
+            <span><strong>{{ t('themeDetail.installTitle') }}</strong><small>{{ t('themeDetail.installDescription') }}</small></span>
             <Icon name="material-symbols:open-in-new" size="18" />
           </a>
         </aside>
@@ -268,15 +269,15 @@ function assetUrl(kind: 'preview' | 'backdrop'): string {
 
       <AppDialog
         v-model:open="deleteOpen"
-        title="删除这个主题？"
-        :description="`${data.theme.name} (${data.theme.id}) 将从公开目录移除。`"
+        :title="t('themeDetail.deleteDialogTitle')"
+        :description="t('themeDetail.deleteDialogDescription', { name: data.theme.name, id: data.theme.id })"
       >
-        <p class="delete-confirmation">删除后，主题详情、所有历史版本和下载入口将不再公开。此操作不会删除你的 GitHub 账号。</p>
+        <p class="delete-confirmation">{{ t('themeDetail.deleteDialogBody') }}</p>
         <p v-if="deleteError" class="delete-error" role="alert">{{ deleteError }}</p>
         <template #actions>
-          <button type="button" class="button button--text" :disabled="deleting" @click="deleteOpen = false">取消</button>
+          <button type="button" class="button button--text" :disabled="deleting" @click="deleteOpen = false">{{ t('common.cancel') }}</button>
           <button type="button" class="button button--danger" :disabled="deleting" @click="deleteTheme">
-            <Icon name="material-symbols:delete-outline" size="19" /> {{ deleting ? '正在删除…' : '确认删除' }}
+            <Icon name="material-symbols:delete-outline" size="19" /> {{ deleting ? t('themeDetail.deleting') : t('themeDetail.confirmDelete') }}
           </button>
         </template>
       </AppDialog>

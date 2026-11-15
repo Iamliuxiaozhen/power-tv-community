@@ -8,22 +8,23 @@ const props = defineProps<{
   version: ThemeVersionSummary
 }>()
 
+const { t } = useI18n()
 const mode = ref<'light' | 'dark'>('light')
 const manifest = computed(() => props.version.metadata)
 const colors = computed(() => mode.value === 'dark'
   ? manifest.value.schemes.dark ?? manifest.value.schemes.light
   : manifest.value.schemes.light)
-const moduleInfo: Partial<Record<ThemeModule, { label: string, value: string, icon: string }>> = {
-  cpu: { label: '处理器', value: '32%', icon: 'material-symbols:memory' },
-  gpu: { label: '图形处理器', value: '18%', icon: 'material-symbols:monitor-outline' },
-  thermal: { label: '设备温度', value: '42°C', icon: 'material-symbols:device-thermostat' },
-  memory: { label: '运行内存', value: '2.4 GB', icon: 'material-symbols:developer-board' },
-  battery: { label: '电源状态', value: '86%', icon: 'material-symbols:battery-5-bar' },
-  device: { label: '设备', value: '已连接', icon: 'material-symbols:tv' },
-}
+const moduleInfo = computed<Partial<Record<ThemeModule, { label: string, value: string, icon: string }>>>(() => ({
+  cpu: { label: t('preview.modules.cpu'), value: '32%', icon: 'material-symbols:memory' },
+  gpu: { label: t('preview.modules.gpu'), value: '18%', icon: 'material-symbols:monitor-outline' },
+  thermal: { label: t('preview.modules.thermal'), value: '42°C', icon: 'material-symbols:device-thermostat' },
+  memory: { label: t('preview.modules.memory'), value: '2.4 GB', icon: 'material-symbols:developer-board' },
+  battery: { label: t('preview.modules.battery'), value: '86%', icon: 'material-symbols:battery-5-bar' },
+  device: { label: t('preview.modules.device'), value: t('preview.modules.connected'), icon: 'material-symbols:tv' },
+}))
 const visibleModules = computed(() => {
   const configured = manifest.value.layout?.visible ?? manifest.value.layout?.order ?? ['cpu', 'memory', 'battery']
-  const modules = configured.filter(module => module !== 'hero' && moduleInfo[module])
+  const modules = configured.filter(module => module !== 'hero' && moduleInfo.value[module])
   return (modules.length > 0 ? modules : ['cpu', 'memory', 'battery'] as ThemeModule[]).slice(0, 3)
 })
 const showHero = computed(() => {
@@ -54,15 +55,15 @@ const previewStyle = computed(() => {
 </script>
 
 <template>
-  <section class="preview-shell" aria-label="主题交互预览">
+  <section class="preview-shell" :aria-label="t('preview.ariaLabel')">
     <div class="preview-toolbar">
-      <span><i aria-hidden="true" /> 实时配色预览</span>
-      <div class="preview-modes" role="group" aria-label="预览配色方案">
+      <span><i aria-hidden="true" /> {{ t('preview.liveColors') }}</span>
+      <div class="preview-modes" role="group" :aria-label="t('preview.modesAria')">
         <button type="button" :class="{ 'is-active': mode === 'light' }" :aria-pressed="mode === 'light'" @click="mode = 'light'">
-          <Icon name="material-symbols:light-mode-outline" size="18" /> 浅色
+          <Icon name="material-symbols:light-mode-outline" size="18" /> {{ t('preview.light') }}
         </button>
         <button v-if="manifest.schemes.dark" type="button" :class="{ 'is-active': mode === 'dark' }" :aria-pressed="mode === 'dark'" @click="mode = 'dark'">
-          <Icon name="material-symbols:dark-mode-outline" size="18" /> 深色
+          <Icon name="material-symbols:dark-mode-outline" size="18" /> {{ t('preview.dark') }}
         </button>
       </div>
     </div>
@@ -76,10 +77,10 @@ const previewStyle = computed(() => {
         </header>
         <div class="demo-content" :class="{ 'demo-content--without-hero': !showHero }">
           <article v-if="showHero" class="demo-hero">
-            <span class="demo-eyebrow">DEVICE OVERVIEW</span>
-            <strong>设备运行状态</strong>
-            <p>所有系统运行正常</p>
-            <span class="demo-action">查看详情 <Icon name="material-symbols:arrow-forward" size="13" /></span>
+            <span class="demo-eyebrow">{{ t('preview.eyebrow') }}</span>
+            <strong>{{ t('preview.heroTitle') }}</strong>
+            <p>{{ t('preview.heroDescription') }}</p>
+            <span class="demo-action">{{ t('preview.heroAction') }} <Icon name="material-symbols:arrow-forward" size="13" /></span>
           </article>
           <div class="demo-stats">
             <article v-for="module in visibleModules" :key="module">
@@ -92,7 +93,7 @@ const previewStyle = computed(() => {
         </div>
       </div>
     </div>
-    <p class="preview-caption"><Icon name="material-symbols:info-outline" size="16" /> 预览用于展示主题配色，实际效果以 power-tv 为准。</p>
+    <p class="preview-caption"><Icon name="material-symbols:info-outline" size="16" /> {{ t('preview.caption') }}</p>
   </section>
 </template>
 

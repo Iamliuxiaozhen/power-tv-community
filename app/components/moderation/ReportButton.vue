@@ -9,6 +9,7 @@ const props = withDefaults(defineProps<{
   iconOnly: false,
 })
 
+const { t } = useI18n()
 const { loggedIn, loginUrl } = useAuth()
 const { showSnackbar } = useSnackbar()
 const reasonGroup = useId()
@@ -18,13 +19,13 @@ const details = ref('')
 const submitting = ref(false)
 const reported = ref(false)
 const submitError = ref('')
-const reasons: { value: ReportReason, label: string, description: string }[] = [
-  { value: 'spam', label: '垃圾信息', description: '广告、刷屏或无关内容' },
-  { value: 'malware', label: '恶意内容', description: '可能包含恶意代码或有害文件' },
-  { value: 'copyright', label: '侵犯版权', description: '未经授权使用他人的作品' },
-  { value: 'other', label: '其他问题', description: '其他需要管理员检查的问题' },
-]
-const targetLabel = computed(() => props.targetType === 'theme' ? '主题' : '评论')
+const reasons = computed<{ value: ReportReason, label: string, description: string }[]>(() => [
+  { value: 'spam', label: t('report.reasons.spam'), description: t('report.reasons.spamDescription') },
+  { value: 'malware', label: t('report.reasons.malware'), description: t('report.reasons.malwareDescription') },
+  { value: 'copyright', label: t('report.reasons.copyright'), description: t('report.reasons.copyrightDescription') },
+  { value: 'other', label: t('report.reasons.other'), description: t('report.reasons.otherDescription') },
+])
+const targetLabel = computed(() => props.targetType === 'theme' ? t('report.theme') : t('report.comment'))
 const canSubmit = computed(() => details.value.length <= 1000 && !submitting.value && !reported.value)
 
 watch(() => [props.targetType, props.targetId], () => {
@@ -60,19 +61,19 @@ async function submitReport(): Promise<void> {
     reported.value = true
     open.value = false
     details.value = ''
-    showSnackbar('举报已提交，感谢你的反馈。')
+    showSnackbar(t('report.success'))
   }
   catch (error) {
     const status = (error as { status?: number }).status
     submitError.value = status === 401
-      ? '登录已过期，请重新登录后举报。'
+      ? t('report.errorSession')
       : status === 409
-        ? '你已经提交过待处理的举报，请勿重复提交。'
+        ? t('report.errorDuplicate')
         : status === 429
-          ? '举报过于频繁，请稍后再试。'
+          ? t('report.errorRate')
           : status === 404
-            ? '该内容已不可举报，请刷新页面后重试。'
-            : '举报提交失败，请检查网络连接后重试。'
+            ? t('report.errorGone')
+            : t('report.errorGeneric')
     if (status === 409) reported.value = true
   }
   finally {
@@ -85,34 +86,34 @@ async function submitReport(): Promise<void> {
   <button
     type="button"
     :class="iconOnly ? 'icon-button report-icon-button' : 'button button--text button--small report-button'"
-    :aria-label="iconOnly ? `举报${targetLabel}` : undefined"
-    :title="reported ? '举报已提交' : `举报${targetLabel}`"
+    :aria-label="iconOnly ? t('report.action', { target: targetLabel }) : undefined"
+    :title="reported ? t('report.submitted') : t('report.action', { target: targetLabel })"
     :disabled="reported"
     @click="openReport"
   >
     <Icon :name="reported ? 'material-symbols:check-circle-outline' : 'material-symbols:flag-outline'" size="19" />
-    <span v-if="!iconOnly">{{ reported ? '已举报' : `举报${targetLabel}` }}</span>
+    <span v-if="!iconOnly">{{ reported ? t('report.submittedAction') : t('report.action', { target: targetLabel }) }}</span>
   </button>
 
   <AppDialog
     v-model:open="open"
-    :title="`举报${targetLabel}`"
-    description="请选择最符合的原因。管理员会核实内容，举报不会公开你的身份。"
+    :title="t('report.action', { target: targetLabel })"
+    :description="t('report.dialogDescription')"
   >
     <fieldset class="report-reasons" :disabled="submitting">
-      <legend>举报原因</legend>
+      <legend>{{ t('report.reasonLegend') }}</legend>
       <label v-for="item in reasons" :key="item.value" class="report-reason" :class="{ 'is-selected': reason === item.value }">
         <input v-model="reason" type="radio" :name="reasonGroup" :value="item.value">
         <span><strong>{{ item.label }}</strong><small>{{ item.description }}</small></span>
       </label>
     </fieldset>
     <label class="report-details">
-      <span>补充说明（可选）</span>
+      <span>{{ t('report.detailsLabel') }}</span>
       <textarea
         v-model="details"
         maxlength="1000"
         rows="4"
-        placeholder="提供有助于管理员判断的信息…"
+        :placeholder="t('report.detailsPlaceholder')"
         :disabled="submitting"
         @input="submitError = ''"
       />
@@ -120,9 +121,9 @@ async function submitReport(): Promise<void> {
     </label>
     <p v-if="submitError" class="report-error" role="alert">{{ submitError }}</p>
     <template #actions>
-      <button type="button" class="button button--text" :disabled="submitting" @click="open = false">取消</button>
+      <button type="button" class="button button--text" :disabled="submitting" @click="open = false">{{ t('common.cancel') }}</button>
       <button type="button" class="button" :disabled="!canSubmit" @click="submitReport">
-        <Icon name="material-symbols:flag-outline" size="18" /> {{ submitting ? '正在提交…' : '提交举报' }}
+        <Icon name="material-symbols:flag-outline" size="18" /> {{ submitting ? t('report.submitting') : t('report.submit') }}
       </button>
     </template>
   </AppDialog>
