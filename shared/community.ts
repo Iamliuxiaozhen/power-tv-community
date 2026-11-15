@@ -97,3 +97,55 @@ export interface DashboardResponse {
   favorites: ThemeSummary[]
   stats: DashboardStats
 }
+
+export type ReportReason = 'spam' | 'malware' | 'copyright' | 'other'
+export type ReportStatus = 'pending' | 'resolved' | 'dismissed'
+export type ReportTargetType = 'theme' | 'comment'
+export type ReportAction = 'resolve' | 'dismiss' | 'hide' | 'restore'
+
+export interface ModerationTheme {
+  id: string
+  name: string
+  status: ThemeSummary['status']
+  owner: CommunityUser
+}
+
+export interface ModerationComment {
+  id: string
+  body: string
+  status: CommunityComment['status']
+  createdAt: string
+  author: CommunityUser
+}
+
+export interface AdminReport {
+  id: string
+  targetType: ReportTargetType
+  targetId: string
+  reason: ReportReason
+  details: string
+  status: ReportStatus
+  createdAt: string
+  reporter: CommunityUser
+  handledBy: CommunityUser | null
+  handledAt: string | null
+  theme: ModerationTheme
+  comment: ModerationComment | null
+}
+
+export interface AdminReportListResponse {
+  items: AdminReport[]
+  nextCursor: string | null
+}
+
+export interface CreateReportResponse {
+  id: string
+  status: 'pending'
+  createdAt: string
+}
+
+export interface ModerateReportResponse {
+  id: string
+  status: ReportStatus
+  targetStatus: ThemeSummary['status'] | CommunityComment['status']
+}

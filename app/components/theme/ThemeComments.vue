@@ -170,6 +170,12 @@ async function deleteComment(): Promise<void> {
             </div>
             <div class="comment__meta">
               <time :datetime="comment.createdAt">{{ formatDate(comment.createdAt) }}</time>
+              <ReportButton
+                v-if="comment.status === 'visible'"
+                target-type="comment"
+                :target-id="comment.id"
+                icon-only
+              />
               <button
                 v-if="comment.status === 'visible' && user?.githubId === comment.author.githubId"
                 type="button"

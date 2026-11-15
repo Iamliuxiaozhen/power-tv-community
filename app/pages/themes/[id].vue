@@ -173,6 +173,9 @@ function assetUrl(kind: 'preview' | 'backdrop'): string {
               {{ favorited ? '已收藏' : '收藏' }}
             </button>
           </div>
+          <div class="detail-report">
+            <ReportButton target-type="theme" :target-id="data.theme.id" />
+          </div>
           <span>适用于 power-tv {{ selectedVersion.metadata.minAppVersion ?? '1.5.0' }} 及以上版本</span>
         </div>
       </header>
@@ -406,6 +409,16 @@ function assetUrl(kind: 'preview' | 'backdrop'): string {
 .detail-reactions .button.is-active {
   background: var(--md-primary-container);
   color: var(--md-on-primary-container);
+}
+
+.detail-report {
+  display: flex;
+  justify-content: center;
+}
+
+.detail-report :deep(.report-button) {
+  width: 100%;
+  margin-top: 4px;
 }
 
 .detail-primary-action > span {
