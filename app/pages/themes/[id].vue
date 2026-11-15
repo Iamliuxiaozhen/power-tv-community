@@ -174,7 +174,7 @@ function assetUrl(kind: 'preview' | 'backdrop'): string {
             </button>
           </div>
           <div class="detail-report">
-            <ReportButton target-type="theme" :target-id="data.theme.id" />
+            <ModerationReportButton target-type="theme" :target-id="data.theme.id" />
           </div>
           <span>适用于 power-tv {{ selectedVersion.metadata.minAppVersion ?? '1.5.0' }} 及以上版本</span>
         </div>
@@ -256,7 +256,7 @@ function assetUrl(kind: 'preview' | 'backdrop'): string {
         </aside>
       </div>
 
-      <VersionList
+      <ThemeVersionList
         :theme-id="data.theme.id"
         :versions="data.versions"
         :latest-version="data.theme.version"

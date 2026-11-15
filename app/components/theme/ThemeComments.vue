@@ -170,7 +170,7 @@ async function deleteComment(): Promise<void> {
             </div>
             <div class="comment__meta">
               <time :datetime="comment.createdAt">{{ formatDate(comment.createdAt) }}</time>
-              <ReportButton
+              <ModerationReportButton
                 v-if="comment.status === 'visible'"
                 target-type="comment"
                 :target-id="comment.id"
