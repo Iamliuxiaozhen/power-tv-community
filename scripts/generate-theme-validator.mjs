@@ -10,7 +10,13 @@ const outputPath = `${root}/shared/theme/theme-validator.generated.ts`
 const schema = JSON.parse(await readFile(schemaPath, 'utf8'))
 const ajv = new Ajv({ allErrors: true, strict: true, code: { source: true, esm: true } })
 const validate = ajv.compile(schema)
-const source = standaloneCode(ajv, validate)
+const source = standaloneCode(ajv, validate).replace(
+  /const (\w+) = require\("([^"]+)"\)\.default;/g,
+  'import $1 from "$2.js";',
+)
+if (/\brequire\(/.test(source)) {
+  throw new Error('Standalone validator still contains CommonJS require() calls')
+}
 
 const banner = `// 由 scripts/generate-theme-validator.mjs 依据 theme.schema.json 生成，请勿手工修改。
 // 重新生成：npm run theme:validator

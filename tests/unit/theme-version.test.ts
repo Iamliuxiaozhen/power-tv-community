@@ -56,6 +56,7 @@ describe('manifest validation', () => {
   it('ships a precompiled validator that avoids runtime code generation', () => {
     const source = readFileSync(new URL('../../shared/theme/theme-validator.generated.ts', import.meta.url), 'utf8')
     expect(source).not.toContain('new Function')
+    expect(source).not.toMatch(/\brequire\(/)
     expect(source).toMatch(/export default validate\d+/)
   })
 })
