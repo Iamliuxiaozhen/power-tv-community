@@ -1,12 +1,13 @@
 export type ColorMode = 'system' | 'light' | 'dark'
 
-const colorModes: { value: ColorMode, label: string, icon: string }[] = [
-  { value: 'system', label: '跟随系统', icon: 'material-symbols:brightness-auto-outline' },
-  { value: 'light', label: '浅色模式', icon: 'material-symbols:light-mode-outline' },
-  { value: 'dark', label: '深色模式', icon: 'material-symbols:dark-mode-outline' },
+const colorModes: { value: ColorMode, labelKey: string, icon: string }[] = [
+  { value: 'system', labelKey: 'colorMode.system', icon: 'material-symbols:brightness-auto-outline' },
+  { value: 'light', labelKey: 'colorMode.light', icon: 'material-symbols:light-mode-outline' },
+  { value: 'dark', labelKey: 'colorMode.dark', icon: 'material-symbols:dark-mode-outline' },
 ]
 
 export function useColorMode() {
+  const { t } = useI18n()
   const cookie = useCookie<ColorMode>('power-tv-color-mode', {
     default: () => 'system',
     maxAge: 60 * 60 * 24 * 365,
@@ -16,7 +17,8 @@ export function useColorMode() {
     get: () => colorModes.some(option => option.value === cookie.value) ? cookie.value : 'system',
     set: value => { cookie.value = value },
   })
-  const selected = computed(() => colorModes.find(option => option.value === mode.value) ?? colorModes[0]!)
+  const modes = computed(() => colorModes.map(option => ({ ...option, label: t(option.labelKey) })))
+  const selected = computed(() => modes.value.find(option => option.value === mode.value) ?? modes.value[0]!)
 
   useHead({
     htmlAttrs: {
@@ -24,5 +26,5 @@ export function useColorMode() {
     },
   })
 
-  return { colorModes, mode, selected }
+  return { colorModes: modes, mode, selected }
 }

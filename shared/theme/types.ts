@@ -49,6 +49,8 @@ export interface NormalizedThemeManifest extends ThemeManifest {
 export interface ThemeValidationIssue {
   path: string
   message: string
+  code?: string
+  params?: Record<string, string | number>
 }
 
 export interface ThemeImage {

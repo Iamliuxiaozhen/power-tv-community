@@ -1,6 +1,10 @@
+<script setup lang="ts">
+const { t } = useI18n()
+</script>
+
 <template>
   <div class="app-shell">
-    <a href="#main-content" class="skip-link">跳到主要内容</a>
+    <a href="#main-content" class="skip-link">{{ t('app.skipToContent') }}</a>
     <AppHeader />
     <main id="main-content" class="app-main" tabindex="-1">
       <slot />

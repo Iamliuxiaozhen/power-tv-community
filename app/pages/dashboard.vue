@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { DashboardResponse } from '#shared/community'
 
+const { t } = useI18n()
 const route = useRoute()
 const { loggedIn, loginUrl, ready, user } = useAuth()
 const tab = computed(() => {
@@ -17,12 +18,12 @@ const { data, pending, error, refresh } = await useAsyncData<DashboardResponse |
   { watch: [cursor, loggedIn] },
 )
 
-useHead({ title: '个人面板' })
+useHead({ title: computed(() => t('dashboard.metaTitle')) })
 </script>
 
 <template>
   <div class="dashboard-page">
-    <div v-if="!ready || (loggedIn && pending && !data)" class="dashboard-loading" aria-label="正在加载个人面板">
+    <div v-if="!ready || (loggedIn && pending && !data)" class="dashboard-loading" :aria-label="t('dashboard.loading')">
       <div class="dashboard-loading__header skeleton" />
       <div class="dashboard-loading__stats skeleton" />
       <div class="dashboard-loading__content skeleton" />
@@ -31,84 +32,84 @@ useHead({ title: '个人面板' })
     <AppEmptyState
       v-else-if="!loggedIn"
       icon="material-symbols:account-circle-outline"
-      title="登录后打开个人面板"
-      description="查看你发布的主题、收藏的作品，以及下载和点赞统计。"
+      :title="t('dashboard.loginTitle')"
+      :description="t('dashboard.loginDescription')"
     >
-      <a :href="loginUrl()" class="button"><Icon name="material-symbols:login" size="20" /> 使用 GitHub 继续</a>
+      <a :href="loginUrl()" class="button"><Icon name="material-symbols:login" size="20" /> {{ t('dashboard.continueWithGithub') }}</a>
     </AppEmptyState>
 
     <AppEmptyState
       v-else-if="error && !data"
       icon="material-symbols:cloud-off"
-      title="个人面板加载失败"
-      description="暂时无法读取你的主题和收藏，请稍后重试。"
+      :title="t('dashboard.loadErrorTitle')"
+      :description="t('dashboard.loadErrorDescription')"
     >
-      <button type="button" class="button button--tonal" @click="refresh()">重试</button>
+      <button type="button" class="button button--tonal" @click="refresh()">{{ t('common.retry') }}</button>
     </AppEmptyState>
 
     <template v-else-if="data && user">
       <header class="dashboard-header">
         <div class="dashboard-identity">
-          <img :src="user.avatarUrl" :alt="`${user.login} 的 GitHub 头像`" width="76" height="76">
+          <img :src="user.avatarUrl" :alt="t('dashboard.avatarAlt', { login: user.login })" width="76" height="76">
           <div>
-            <p class="eyebrow">CREATOR DASHBOARD</p>
+            <p class="eyebrow">{{ t('dashboard.eyebrow') }}</p>
             <h1>{{ user.displayName || user.login }}</h1>
             <a :href="user.githubUrl" target="_blank" rel="noreferrer">@{{ user.login }} <Icon name="material-symbols:open-in-new" size="15" /></a>
           </div>
         </div>
-        <NuxtLink to="/upload" class="button"><Icon name="material-symbols:add" size="20" /> 发布新主题</NuxtLink>
+        <NuxtLink to="/upload" class="button"><Icon name="material-symbols:add" size="20" /> {{ t('dashboard.publishNew') }}</NuxtLink>
       </header>
 
-      <section class="dashboard-stats" aria-label="创作统计">
+      <section class="dashboard-stats" :aria-label="t('dashboard.statsAria')">
         <article class="card">
           <span><Icon name="material-symbols:palette-outline" size="23" /></span>
-          <div><strong>{{ data.stats.themes }}</strong><small>我的主题</small></div>
+          <div><strong>{{ data.stats.themes }}</strong><small>{{ t('dashboard.statThemes') }}</small></div>
         </article>
         <article class="card">
           <span><Icon name="material-symbols:bookmark-outline" size="23" /></span>
-          <div><strong>{{ data.stats.favorites }}</strong><small>我的收藏</small></div>
+          <div><strong>{{ data.stats.favorites }}</strong><small>{{ t('dashboard.statFavorites') }}</small></div>
         </article>
         <article class="card">
           <span><Icon name="material-symbols:download" size="23" /></span>
-          <div><strong>{{ data.stats.downloads }}</strong><small>累计下载</small></div>
+          <div><strong>{{ data.stats.downloads }}</strong><small>{{ t('dashboard.statDownloads') }}</small></div>
         </article>
         <article class="card">
           <span><Icon name="material-symbols:favorite-outline" size="23" /></span>
-          <div><strong>{{ data.stats.likes }}</strong><small>收到点赞</small></div>
+          <div><strong>{{ data.stats.likes }}</strong><small>{{ t('dashboard.statLikes') }}</small></div>
         </article>
       </section>
 
-      <nav class="dashboard-tabs" aria-label="个人主题列表">
+      <nav class="dashboard-tabs" :aria-label="t('dashboard.tabsAria')">
         <NuxtLink :to="{ query: {} }" :class="{ 'is-active': tab === 'themes' }" :aria-current="tab === 'themes' ? 'page' : undefined">
-          <Icon name="material-symbols:deployed-code-outline" size="20" /> 我的发布
+          <Icon name="material-symbols:deployed-code-outline" size="20" /> {{ t('dashboard.tabThemes') }}
           <span>{{ data.stats.themes }}</span>
         </NuxtLink>
         <NuxtLink :to="{ query: { tab: 'likes' } }" :class="{ 'is-active': tab === 'likes' }" :aria-current="tab === 'likes' ? 'page' : undefined">
-          <Icon name="material-symbols:favorite-outline" size="20" /> 我的点赞
+          <Icon name="material-symbols:favorite-outline" size="20" /> {{ t('dashboard.tabLikes') }}
           <span>{{ data.liked.length }}</span>
         </NuxtLink>
         <NuxtLink :to="{ query: { tab: 'favorites' } }" :class="{ 'is-active': tab === 'favorites' }" :aria-current="tab === 'favorites' ? 'page' : undefined">
-          <Icon name="material-symbols:bookmark-outline" size="20" /> 我的收藏
+          <Icon name="material-symbols:bookmark-outline" size="20" /> {{ t('dashboard.tabFavorites') }}
           <span>{{ data.stats.favorites }}</span>
         </NuxtLink>
       </nav>
 
-      <section class="dashboard-content" :aria-label="tab === 'themes' ? '我的发布' : tab === 'likes' ? '我的点赞' : '我的收藏'">
+      <section class="dashboard-content" :aria-label="tab === 'themes' ? t('dashboard.tabThemes') : tab === 'likes' ? t('dashboard.tabLikes') : t('dashboard.tabFavorites')">
         <div v-if="pending" class="dashboard-grid">
           <div v-for="index in 3" :key="index" class="dashboard-skeleton skeleton" />
         </div>
-        <AppEmptyState v-else-if="error" icon="material-symbols:cloud-off" title="列表加载失败">
-          <button type="button" class="button button--tonal" @click="refresh()">重试</button>
+        <AppEmptyState v-else-if="error" icon="material-symbols:cloud-off" :title="t('dashboard.listError')">
+          <button type="button" class="button button--tonal" @click="refresh()">{{ t('common.retry') }}</button>
         </AppEmptyState>
 
         <template v-else-if="tab === 'themes'">
           <AppEmptyState
             v-if="!data.themes.items.length"
             icon="material-symbols:palette-outline"
-            title="还没有发布主题"
-            description="上传第一个主题包，让更多人发现你的配色与创意。"
+            :title="t('dashboard.emptyThemesTitle')"
+            :description="t('dashboard.emptyThemesDescription')"
           >
-            <NuxtLink to="/upload" class="button">发布主题</NuxtLink>
+            <NuxtLink to="/upload" class="button">{{ t('dashboard.emptyThemesAction') }}</NuxtLink>
           </AppEmptyState>
           <template v-else>
             <div class="dashboard-grid">
@@ -117,20 +118,20 @@ useHead({ title: '个人面板' })
                 <div class="dashboard-theme__manage">
                   <span class="chip" :class="{ 'chip--selected': theme.status === 'published' }">
                     <Icon :name="theme.status === 'published' ? 'material-symbols:public' : 'material-symbols:visibility-off-outline'" size="16" />
-                    {{ theme.status === 'published' ? '公开' : '已隐藏' }}
+                    {{ theme.status === 'published' ? t('dashboard.statusPublished') : t('dashboard.statusHidden') }}
                   </span>
                   <NuxtLink v-if="theme.status === 'published'" :to="`/upload/${encodeURIComponent(theme.id)}`">
-                    管理主题 <Icon name="material-symbols:arrow-forward" size="16" />
+                    {{ t('dashboard.manage') }} <Icon name="material-symbols:arrow-forward" size="16" />
                   </NuxtLink>
                 </div>
               </div>
             </div>
-            <nav v-if="cursor || data.themes.nextCursor" class="dashboard-pagination" aria-label="我的发布分页">
+            <nav v-if="cursor || data.themes.nextCursor" class="dashboard-pagination" :aria-label="t('dashboard.themesPagination')">
               <button v-if="cursor" type="button" class="button button--outlined" @click="$router.back()">
-                <Icon name="material-symbols:arrow-back" size="19" /> 上一页
+                <Icon name="material-symbols:arrow-back" size="19" /> {{ t('common.previous') }}
               </button>
               <NuxtLink v-if="data.themes.nextCursor" :to="{ query: { cursor: data.themes.nextCursor } }" class="button button--tonal">
-                下一页 <Icon name="material-symbols:arrow-forward" size="19" />
+                {{ t('common.next') }} <Icon name="material-symbols:arrow-forward" size="19" />
               </NuxtLink>
             </nav>
           </template>
@@ -140,10 +141,10 @@ useHead({ title: '个人面板' })
           <AppEmptyState
             v-if="!data.favorites.length"
             icon="material-symbols:bookmark-outline"
-            title="收藏夹还是空的"
-            description="在主题详情页点击收藏，之后可以从这里快速找到它。"
+            :title="t('dashboard.emptyFavoritesTitle')"
+            :description="t('dashboard.emptyFavoritesDescription')"
           >
-            <NuxtLink to="/themes" class="button button--tonal">浏览主题</NuxtLink>
+            <NuxtLink to="/themes" class="button button--tonal">{{ t('dashboard.emptyFavoritesAction') }}</NuxtLink>
           </AppEmptyState>
           <div v-else class="dashboard-grid">
             <ThemeCard v-for="theme in data.favorites" :key="theme.id" :theme="theme" />
@@ -154,10 +155,10 @@ useHead({ title: '个人面板' })
           <AppEmptyState
             v-if="!data.liked.length"
             icon="material-symbols:favorite-outline"
-            title="还没有点赞主题"
-            description="在主题详情页点亮心形按钮，把喜欢的作品加入这个列表。"
+            :title="t('dashboard.emptyLikesTitle')"
+            :description="t('dashboard.emptyLikesDescription')"
           >
-            <NuxtLink to="/themes" class="button button--tonal">发现主题</NuxtLink>
+            <NuxtLink to="/themes" class="button button--tonal">{{ t('dashboard.emptyLikesAction') }}</NuxtLink>
           </AppEmptyState>
           <div v-else class="dashboard-grid">
             <ThemeCard v-for="theme in data.liked" :key="theme.id" :theme="theme" />

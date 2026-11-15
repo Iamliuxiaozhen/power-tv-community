@@ -77,7 +77,11 @@ export function throwThemeUploadError(error: unknown): never {
     throw createError({
       statusCode: 400,
       statusMessage: 'Invalid theme package',
-      data: { message: error.message, issues: error.issues satisfies ThemeValidationIssue[] },
+      data: {
+        message: error.message,
+        ...(error.issues[0]?.code ? { messageKey: error.issues[0].code } : {}),
+        issues: error.issues satisfies ThemeValidationIssue[],
+      },
     })
   }
   if (error instanceof ThemeRepositoryError) {
@@ -90,7 +94,10 @@ export function throwThemeUploadError(error: unknown): never {
     throw createError({
       statusCode,
       statusMessage: 'Theme publish failed',
-      data: { message: error.message },
+      data: {
+        message: error.message,
+        ...(error.messageKey ? { messageKey: error.messageKey } : {}),
+      },
     })
   }
   throw error

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { t } = useI18n()
 const open = defineModel<boolean>('open', { required: true })
 defineProps<{ title: string, description?: string }>()
 const dialog = useTemplateRef('dialog')
@@ -31,7 +32,7 @@ onMounted(() => {
           <h2 :id="titleId">{{ title }}</h2>
           <p v-if="description" :id="`${titleId}-description`">{{ description }}</p>
         </div>
-        <button type="button" class="icon-button" aria-label="关闭对话框" @click="open = false">
+        <button type="button" class="icon-button" :aria-label="t('common.closeDialog')" @click="open = false">
           <Icon name="material-symbols:close" size="22" />
         </button>
       </div>

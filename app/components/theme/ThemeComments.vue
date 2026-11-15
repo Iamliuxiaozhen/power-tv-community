@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { CommentListResponse, CommunityComment } from '#shared/community'
 
+const { t } = useI18n()
+const { formatDate } = useFormatters()
 const props = defineProps<{ themeId: string }>()
 const { loggedIn, loginUrl, user } = useAuth()
 const { showSnackbar } = useSnackbar()
@@ -34,15 +36,15 @@ async function submitComment(): Promise<void> {
     })
     comments.value = [comment, ...comments.value]
     commentBody.value = ''
-    showSnackbar('评论已发布')
+    showSnackbar(t('comments.published'))
   }
   catch (error) {
     const status = (error as { status?: number }).status
     submitError.value = status === 401
-      ? '登录已过期，请重新登录后评论。'
+      ? t('comments.submitErrorSession')
       : status === 429
-        ? '评论过于频繁，请稍后再试。'
-        : '评论发布失败，请检查内容后重试。'
+        ? t('comments.submitErrorRate')
+        : t('comments.submitErrorGeneric')
   }
   finally {
     submitting.value = false
@@ -62,7 +64,7 @@ async function loadMore(): Promise<void> {
     nextCursor.value = page.nextCursor
   }
   catch {
-    loadMoreError.value = '更多评论加载失败，请重试。'
+    loadMoreError.value = t('comments.loadMoreError')
   }
   finally {
     loadingMore.value = false
@@ -91,10 +93,10 @@ async function deleteComment(): Promise<void> {
       : comment)
     deleteOpen.value = false
     deleteTarget.value = null
-    showSnackbar('评论已删除')
+    showSnackbar(t('comments.deleted'))
   }
   catch {
-    deleteError.value = '删除失败，请检查登录状态和网络连接后重试。'
+    deleteError.value = t('comments.deleteError')
   }
   finally {
     deleting.value = false
@@ -106,22 +108,22 @@ async function deleteComment(): Promise<void> {
   <section class="comments-section" aria-labelledby="comments-heading">
     <div class="section-heading">
       <div>
-        <h2 id="comments-heading">社区讨论</h2>
-        <p>分享使用体验，或向创作者反馈主题问题。</p>
+        <h2 id="comments-heading">{{ t('comments.title') }}</h2>
+        <p>{{ t('comments.description') }}</p>
       </div>
-      <span v-if="comments.length" class="chip">{{ comments.length }} 条已加载</span>
+      <span v-if="comments.length" class="chip">{{ t('comments.loadedCount', { count: comments.length }) }}</span>
     </div>
 
     <form v-if="loggedIn && user" class="comment-composer card" @submit.prevent="submitComment">
       <img :src="user.avatarUrl" alt="" width="42" height="42">
       <div class="comment-composer__main">
-        <label for="new-comment" class="visually-hidden">发表评论</label>
+        <label for="new-comment" class="visually-hidden">{{ t('comments.composerLabel') }}</label>
         <textarea
           id="new-comment"
           v-model="commentBody"
           maxlength="2000"
           rows="4"
-          placeholder="写下你的体验或建议…"
+          :placeholder="t('comments.placeholder')"
           :disabled="submitting"
           @input="submitError = ''"
         />
@@ -129,30 +131,30 @@ async function deleteComment(): Promise<void> {
         <div class="comment-composer__footer">
           <span :class="{ 'is-limit': commentBody.length >= 2000 }">{{ commentBody.length }} / 2000</span>
           <button type="submit" class="button button--small" :disabled="!canSubmit">
-            <Icon name="material-symbols:send-outline" size="18" /> {{ submitting ? '正在发布…' : '发表评论' }}
+            <Icon name="material-symbols:send-outline" size="18" /> {{ submitting ? t('comments.publishing') : t('comments.submit') }}
           </button>
         </div>
       </div>
     </form>
     <div v-else class="comment-login">
-      <span><Icon name="material-symbols:forum-outline" size="23" /> 登录后参与讨论</span>
-      <a :href="loginUrl()" class="button button--tonal button--small"><Icon name="material-symbols:login" size="18" /> GitHub 登录</a>
+      <span><Icon name="material-symbols:forum-outline" size="23" /> {{ t('comments.loginPrompt') }}</span>
+      <a :href="loginUrl()" class="button button--tonal button--small"><Icon name="material-symbols:login" size="18" /> {{ t('comments.login') }}</a>
     </div>
 
-    <div v-if="pending && !comments.length" class="comment-list" aria-label="正在加载评论">
+    <div v-if="pending && !comments.length" class="comment-list" :aria-label="t('comments.loading')">
       <div v-for="index in 3" :key="index" class="comment-skeleton skeleton" />
     </div>
     <AppEmptyState
       v-else-if="error && !comments.length"
       icon="material-symbols:cloud-off"
-      title="评论加载失败"
-      description="暂时无法读取讨论内容，请稍后重试。"
+      :title="t('comments.loadErrorTitle')"
+      :description="t('comments.loadErrorDescription')"
     >
-      <button type="button" class="button button--tonal" @click="refresh()">重试</button>
+      <button type="button" class="button button--tonal" @click="refresh()">{{ t('common.retry') }}</button>
     </AppEmptyState>
     <div v-else-if="!comments.length" class="comments-empty">
       <Icon name="material-symbols:forum-outline" size="30" />
-      <div><strong>还没有评论</strong><p>成为第一个分享使用体验的人。</p></div>
+      <div><strong>{{ t('comments.emptyTitle') }}</strong><p>{{ t('comments.emptyDescription') }}</p></div>
     </div>
 
     <div v-else class="comment-list">
@@ -180,8 +182,8 @@ async function deleteComment(): Promise<void> {
                 v-if="comment.status === 'visible' && user?.githubId === comment.author.githubId"
                 type="button"
                 class="icon-button"
-                aria-label="删除评论"
-                title="删除评论"
+                :aria-label="t('comments.deleteAria')"
+                :title="t('comments.deleteAria')"
                 @click="confirmDelete(comment.id)"
               >
                 <Icon name="material-symbols:delete-outline" size="19" />
@@ -191,7 +193,7 @@ async function deleteComment(): Promise<void> {
           <p v-if="comment.status === 'visible'" class="comment__body">{{ comment.body }}</p>
           <p v-else class="comment__placeholder">
             <Icon :name="comment.status === 'hidden' ? 'material-symbols:visibility-off-outline' : 'material-symbols:delete-outline'" size="17" />
-            {{ comment.status === 'hidden' ? '此评论已被管理员隐藏。' : '此评论已由作者删除。' }}
+            {{ comment.status === 'hidden' ? t('comments.hiddenByModerator') : t('comments.deletedByAuthor') }}
           </p>
         </div>
       </article>
@@ -200,17 +202,17 @@ async function deleteComment(): Promise<void> {
     <div v-if="nextCursor || loadMoreError" class="comments-more">
       <p v-if="loadMoreError" role="alert">{{ loadMoreError }}</p>
       <button v-if="nextCursor" type="button" class="button button--outlined" :disabled="loadingMore" @click="loadMore">
-        <Icon name="material-symbols:expand-more" size="20" /> {{ loadingMore ? '正在加载…' : '加载更多评论' }}
+        <Icon name="material-symbols:expand-more" size="20" /> {{ loadingMore ? t('comments.loadingMore') : t('comments.loadMore') }}
       </button>
     </div>
 
-    <AppDialog v-model:open="deleteOpen" title="删除这条评论？" description="删除后，评论正文将不再公开显示。">
-      <p class="comment-delete-copy">讨论中会保留一条“已删除”占位，避免影响其他用户的阅读顺序。</p>
+    <AppDialog v-model:open="deleteOpen" :title="t('comments.deleteDialogTitle')" :description="t('comments.deleteDialogDescription')">
+      <p class="comment-delete-copy">{{ t('comments.deleteDialogBody') }}</p>
       <p v-if="deleteError" class="comment-composer__error" role="alert">{{ deleteError }}</p>
       <template #actions>
-        <button type="button" class="button button--text" :disabled="deleting" @click="deleteOpen = false">取消</button>
+        <button type="button" class="button button--text" :disabled="deleting" @click="deleteOpen = false">{{ t('common.cancel') }}</button>
         <button type="button" class="button button--danger" :disabled="deleting" @click="deleteComment">
-          <Icon name="material-symbols:delete-outline" size="18" /> {{ deleting ? '正在删除…' : '确认删除' }}
+          <Icon name="material-symbols:delete-outline" size="18" /> {{ deleting ? t('comments.deleting') : t('comments.confirmDelete') }}
         </button>
       </template>
     </AppDialog>

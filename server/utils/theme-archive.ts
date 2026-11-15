@@ -21,24 +21,24 @@ interface ArchiveEntry {
 
 export async function validateThemePackage(input: Uint8Array): Promise<ValidatedThemePackage> {
   if (input.byteLength === 0 || input.byteLength > MAX_PACKAGE_BYTES) {
-    throw invalid('主题包不能为空且压缩包大小不能超过 10 MiB')
+    throw invalid('主题包不能为空且压缩包大小不能超过 10 MiB', 'archive', 'archive.emptyOrTooLarge')
   }
 
   const zip = isZip(input)
   if (!zip && input.byteLength > MAX_MANIFEST_BYTES) {
-    throw invalid('裸 JSON 主题不能超过 256 KiB', 'theme.json')
+    throw invalid('裸 JSON 主题不能超过 256 KiB', 'theme.json', 'archive.rawJsonTooLarge')
   }
 
   const files = zip ? await extractArchive(input) : new Map<string, Uint8Array>([['theme.json', input]])
   const manifestBytes = files.get('theme.json')
-  if (!manifestBytes) throw invalid('压缩包根目录缺少 theme.json', 'theme.json')
+  if (!manifestBytes) throw invalid('压缩包根目录缺少 theme.json', 'theme.json', 'archive.missingManifest')
   if (manifestBytes.byteLength > MAX_MANIFEST_BYTES) {
-    throw invalid('theme.json 不能超过 256 KiB', 'theme.json')
+    throw invalid('theme.json 不能超过 256 KiB', 'theme.json', 'archive.manifestTooLarge')
   }
 
   const manifest = validateThemeManifest(parseJson(manifestBytes))
   if (!zip && manifest.backdrop) {
-    throw invalid('裸 JSON 主题不能引用背景图片，请使用 .ptheme 或 .zip', '/backdrop')
+    throw invalid('裸 JSON 主题不能引用背景图片，请使用 .ptheme 或 .zip', '/backdrop', 'archive.rawJsonBackdrop')
   }
 
   const images = new Map<string, ThemeImage>()
@@ -49,7 +49,7 @@ export async function validateThemePackage(input: Uint8Array): Promise<Validated
   let backdrop: ThemeImage | undefined
   if (manifest.backdrop) {
     backdrop = images.get(manifest.backdrop.image)
-    if (!backdrop) throw invalid('找不到背景图片或图片格式不受支持', '/backdrop/image')
+    if (!backdrop) throw invalid('找不到背景图片或图片格式不受支持', '/backdrop/image', 'archive.backdropNotFound')
   }
 
   const preview = [...images.entries()].find(([path]) => path.startsWith('preview.'))?.[1]
@@ -79,7 +79,7 @@ function parseJson(data: Uint8Array): unknown {
     return JSON.parse(text) as unknown
   }
   catch {
-    throw invalid('theme.json 必须是有效的 UTF-8 JSON', 'theme.json')
+    throw invalid('theme.json 必须是有效的 UTF-8 JSON', 'theme.json', 'archive.invalidManifestJson')
   }
 }
 
@@ -92,7 +92,7 @@ function preflightArchive(data: Uint8Array): ArchiveEntry[] {
       break
     }
   }
-  if (eocd < 0) throw invalid('ZIP 目录损坏或不受支持')
+  if (eocd < 0) throw invalid('ZIP 目录损坏或不受支持', 'archive', 'archive.zipDirectoryInvalid')
 
   const entryCount = view.getUint16(eocd + 10, true)
   const centralSize = view.getUint32(eocd + 12, true)
@@ -101,11 +101,13 @@ function preflightArchive(data: Uint8Array): ArchiveEntry[] {
     || view.getUint16(eocd + 8, true) !== entryCount || entryCount === 0xffff
     || centralSize === 0xffffffff || centralOffset === 0xffffffff
     || centralOffset + centralSize > data.length) {
-    throw invalid('不支持多磁盘或 ZIP64 压缩包')
+    throw invalid('不支持多磁盘或 ZIP64 压缩包', 'archive', 'archive.zipUnsupported')
   }
-  if (entryCount > MAX_ARCHIVE_ENTRIES) throw invalid('ZIP 最多允许 64 个条目')
+  if (entryCount > MAX_ARCHIVE_ENTRIES) {
+    throw invalid('ZIP 最多允许 64 个条目', 'archive', 'archive.zipTooManyEntries', { limit: MAX_ARCHIVE_ENTRIES })
+  }
   if (eocd + 22 + view.getUint16(eocd + 20, true) !== data.length) {
-    throw invalid('ZIP 末尾包含无效数据')
+    throw invalid('ZIP 末尾包含无效数据', 'archive', 'archive.zipTrailingData')
   }
 
   const entries: ArchiveEntry[] = []
@@ -113,17 +115,17 @@ function preflightArchive(data: Uint8Array): ArchiveEntry[] {
   let offset = centralOffset
   for (let index = 0; index < entryCount; index += 1) {
     if (offset + 46 > data.length || view.getUint32(offset, true) !== 0x02014b50) {
-      throw invalid('ZIP 中央目录损坏')
+      throw invalid('ZIP 中央目录损坏', 'archive', 'archive.zipCentralDirectoryInvalid')
     }
     const flags = view.getUint16(offset + 8, true)
     const compression = view.getUint16(offset + 10, true)
     const nameLength = view.getUint16(offset + 28, true)
     const extraLength = view.getUint16(offset + 30, true)
     const commentLength = view.getUint16(offset + 32, true)
-    if ((flags & 0x41) !== 0) throw invalid('不支持加密 ZIP 条目')
-    if (compression !== 0 && compression !== 8) throw invalid('ZIP 仅支持存储或 Deflate 压缩')
+    if ((flags & 0x41) !== 0) throw invalid('不支持加密 ZIP 条目', 'archive', 'archive.zipEncrypted')
+    if (compression !== 0 && compression !== 8) throw invalid('ZIP 仅支持存储或 Deflate 压缩', 'archive', 'archive.zipCompression')
     if (offset + 46 + nameLength + extraLength + commentLength > data.length) {
-      throw invalid('ZIP 条目长度无效')
+      throw invalid('ZIP 条目长度无效', 'archive', 'archive.zipEntryLength')
     }
 
     let name: string
@@ -131,17 +133,17 @@ function preflightArchive(data: Uint8Array): ArchiveEntry[] {
       name = decoder.decode(data.subarray(offset + 46, offset + 46 + nameLength))
     }
     catch {
-      throw invalid('ZIP 条目路径必须是有效 UTF-8')
+      throw invalid('ZIP 条目路径必须是有效 UTF-8', 'archive', 'archive.zipEntryNameEncoding')
     }
     validateArchivePath(name)
-    if (names.has(name)) throw invalid(`ZIP 包含重复条目：${name}`)
+    if (names.has(name)) throw invalid(`ZIP 包含重复条目：${name}`, 'archive', 'archive.zipDuplicateEntry', { name })
     names.add(name)
-    if (EXECUTABLE_PATH.test(name)) throw invalid(`主题包不能包含可执行代码或脚本：${name}`)
+    if (EXECUTABLE_PATH.test(name)) throw invalid(`主题包不能包含可执行代码或脚本：${name}`, 'archive', 'archive.executableEntry', { name })
 
     entries.push({ name, directory: name.endsWith('/') })
     offset += 46 + nameLength + extraLength + commentLength
   }
-  if (offset !== centralOffset + centralSize) throw invalid('ZIP 中央目录大小不一致')
+  if (offset !== centralOffset + centralSize) throw invalid('ZIP 中央目录大小不一致', 'archive', 'archive.zipCentralDirectorySize')
   return entries
 }
 
@@ -151,12 +153,12 @@ function validateArchivePath(name: string): void {
       const code = character.codePointAt(0) ?? 0
       return code <= 0x1f || code === 0x7f
     })) {
-    throw invalid(`ZIP 条目路径不安全：${name || '(空路径)'}`)
+    throw invalid(`ZIP 条目路径不安全：${name || '(空路径)'}`, 'archive', 'archive.unsafePath', { name: name || '(空路径)' })
   }
   const path = name.endsWith('/') ? name.slice(0, -1) : name
   const segments = path.split('/')
   if (!path || segments.some(segment => !segment || segment === '.' || segment === '..')) {
-    throw invalid(`ZIP 条目路径不安全：${name}`)
+    throw invalid(`ZIP 条目路径不安全：${name}`, 'archive', 'archive.unsafePath', { name })
   }
 }
 
@@ -171,8 +173,8 @@ async function extractArchive(data: Uint8Array): Promise<Map<string, Uint8Array>
     try {
       const archive = new Unzip((file) => {
         const entry = expected.get(file.name)
-        if (!entry) throw invalid('ZIP 本地条目与中央目录不一致')
-        if (seen.has(entry.name)) throw invalid(`ZIP 包含重复本地条目：${entry.name}`)
+        if (!entry) throw invalid('ZIP 本地条目与中央目录不一致', 'archive', 'archive.zipLocalEntryMismatch')
+        if (seen.has(entry.name)) throw invalid(`ZIP 包含重复本地条目：${entry.name}`, 'archive', 'archive.zipDuplicateLocalEntry', { name: entry.name })
         seen.add(entry.name)
         const keep = entry.name === 'theme.json' || IMAGE_PATH.test(entry.name)
         const chunks: Uint8Array[] = []
@@ -182,12 +184,12 @@ async function extractArchive(data: Uint8Array): Promise<Map<string, Uint8Array>
           if (error) throw error
           fileBytes += chunk.byteLength
           totalBytes += chunk.byteLength
-          if (totalBytes > MAX_UNCOMPRESSED_BYTES) throw invalid('ZIP 实际解压总量不能超过 8 MiB')
+          if (totalBytes > MAX_UNCOMPRESSED_BYTES) throw invalid('ZIP 实际解压总量不能超过 8 MiB', 'archive', 'archive.uncompressedTooLarge')
           if (entry.name === 'theme.json' && fileBytes > MAX_MANIFEST_BYTES) {
-            throw invalid('theme.json 不能超过 256 KiB', 'theme.json')
+            throw invalid('theme.json 不能超过 256 KiB', 'theme.json', 'archive.manifestTooLarge')
           }
           if (IMAGE_PATH.test(entry.name) && fileBytes > MAX_IMAGE_BYTES) {
-            throw invalid(`图片不能超过 4 MiB：${entry.name}`)
+            throw invalid(`图片不能超过 4 MiB：${entry.name}`, 'archive', 'archive.imageTooLarge', { name: entry.name })
           }
           if (keep) chunks.push(chunk.slice())
           if (final && keep) files.set(entry.name, concatChunks(chunks, fileBytes))
@@ -201,11 +203,11 @@ async function extractArchive(data: Uint8Array): Promise<Map<string, Uint8Array>
         const end = Math.min(offset + chunkSize, data.length)
         archive.push(data.subarray(offset, end), end === data.length)
       }
-      if (seen.size !== expected.size) throw invalid('ZIP 本地条目数量与中央目录不一致')
+      if (seen.size !== expected.size) throw invalid('ZIP 本地条目数量与中央目录不一致', 'archive', 'archive.zipEntryCountMismatch')
       resolve(files)
     }
     catch (error) {
-      reject(error instanceof ThemeValidationError ? error : invalid('ZIP 压缩包损坏或无法解压'))
+      reject(error instanceof ThemeValidationError ? error : invalid('ZIP 压缩包损坏或无法解压', 'archive', 'archive.zipCorrupt'))
     }
   })
 }
@@ -221,10 +223,10 @@ function concatChunks(chunks: Uint8Array[], length: number): Uint8Array {
 }
 
 function readImage(path: string, data: Uint8Array): ThemeImage {
-  if (data.byteLength > MAX_IMAGE_BYTES) throw invalid(`图片不能超过 4 MiB：${path}`)
+  if (data.byteLength > MAX_IMAGE_BYTES) throw invalid(`图片不能超过 4 MiB：${path}`, 'archive', 'archive.imageTooLarge', { name: path })
   const extension = path.split('.').pop()?.toLowerCase()
   const expectedType = extension === 'png' ? 'png' : extension === 'webp' ? 'webp' : 'jpg'
-  if (!hasImageSignature(expectedType, data)) throw invalid(`图片真实格式与扩展名不符：${path}`)
+  if (!hasImageSignature(expectedType, data)) throw invalid(`图片真实格式与扩展名不符：${path}`, 'archive', 'archive.imageTypeMismatch', { name: path })
 
   try {
     const dimensions = imageSize(data)
@@ -232,7 +234,7 @@ function readImage(path: string, data: Uint8Array): ThemeImage {
       throw new Error('type mismatch')
     }
     if (dimensions.width * dimensions.height > MAX_IMAGE_PIXELS) {
-      throw invalid(`图片不能超过 400 万像素：${path}`)
+      throw invalid(`图片不能超过 400 万像素：${path}`, 'archive', 'archive.imageTooManyPixels', { name: path })
     }
     return {
       path,
@@ -244,7 +246,7 @@ function readImage(path: string, data: Uint8Array): ThemeImage {
   }
   catch (error) {
     if (error instanceof ThemeValidationError) throw error
-    throw invalid(`图片损坏或格式不受支持：${path}`)
+    throw invalid(`图片损坏或格式不受支持：${path}`, 'archive', 'archive.imageCorrupt', { name: path })
   }
 }
 
@@ -269,6 +271,16 @@ async function digestHex(data: Uint8Array): Promise<string> {
   return [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, '0')).join('')
 }
 
-function invalid(message: string, path = 'archive'): ThemeValidationError {
-  return new ThemeValidationError([{ path, message }])
+function invalid(
+  message: string,
+  path = 'archive',
+  code?: string,
+  params?: Record<string, string | number>,
+): ThemeValidationError {
+  return new ThemeValidationError([{
+    path,
+    message,
+    ...(code ? { code } : {}),
+    ...(params ? { params } : {}),
+  }])
 }

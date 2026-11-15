@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { UserThemesResponse } from '#shared/community'
 
+const { t } = useI18n()
 const route = useRoute()
 const login = computed(() => String(route.params.login))
 const cursor = computed(() => typeof route.query.cursor === 'string' ? route.query.cursor : undefined)
@@ -12,7 +13,7 @@ const { data, pending, error, refresh } = await useAsyncData(
   { watch: [login, cursor] },
 )
 
-useHead({ title: computed(() => data.value ? `${data.value.user.displayName || data.value.user.login} 的主题` : '创作者主页') })
+useHead({ title: computed(() => data.value ? t('profile.metaUserTitle', { name: data.value.user.displayName || data.value.user.login }) : t('profile.metaTitle')) })
 </script>
 
 <template>
@@ -21,41 +22,41 @@ useHead({ title: computed(() => data.value ? `${data.value.user.displayName || d
       <div class="profile-avatar skeleton" />
       <div class="profile-lines"><span class="skeleton" /><span class="skeleton" /></div>
     </div>
-    <AppEmptyState v-else-if="error && !data" icon="material-symbols:person-off-outline" title="无法打开创作者主页" description="这位创作者可能不存在，或网络暂时不可用。">
-      <button type="button" class="button button--tonal" @click="refresh()">重试</button>
-      <NuxtLink to="/themes" class="button button--text">返回主题目录</NuxtLink>
+    <AppEmptyState v-else-if="error && !data" icon="material-symbols:person-off-outline" :title="t('profile.loadErrorTitle')" :description="t('profile.loadErrorDescription')">
+      <button type="button" class="button button--tonal" @click="refresh()">{{ t('common.retry') }}</button>
+      <NuxtLink to="/themes" class="button button--text">{{ t('themeDetail.backToCatalog') }}</NuxtLink>
     </AppEmptyState>
 
     <template v-else-if="data">
       <header class="profile-header">
-        <img class="profile-avatar" :src="data.user.avatarUrl" :alt="`${data.user.login} 的 GitHub 头像`" width="112" height="112">
+        <img class="profile-avatar" :src="data.user.avatarUrl" :alt="t('profile.avatarAlt', { login: data.user.login })" width="112" height="112">
         <div class="profile-identity">
-          <p class="eyebrow">THEME CREATOR</p>
+          <p class="eyebrow">{{ t('profile.eyebrow') }}</p>
           <h1>{{ data.user.displayName || data.user.login }}</h1>
           <p class="profile-login">@{{ data.user.login }}</p>
           <div class="profile-links">
             <a :href="data.user.githubUrl" target="_blank" rel="noreferrer" class="button button--outlined button--small">
-              <Icon name="material-symbols:person-outline" size="19" /> GitHub 主页
+              <Icon name="material-symbols:person-outline" size="19" /> {{ t('profile.githubProfile') }}
               <Icon name="material-symbols:open-in-new" size="15" />
             </a>
-            <span><Icon name="material-symbols:calendar-month-outline" size="18" /> {{ data.user.createdAt.slice(0, 10) }} 加入</span>
+            <span><Icon name="material-symbols:calendar-month-outline" size="18" /> {{ t('profile.joined', { date: data.user.createdAt.slice(0, 10) }) }}</span>
           </div>
         </div>
-        <div class="profile-stat"><strong>{{ data.items.length }}{{ data.nextCursor ? '+' : '' }}</strong><span>公开主题</span></div>
+        <div class="profile-stat"><strong>{{ data.items.length }}{{ data.nextCursor ? '+' : '' }}</strong><span>{{ t('profile.publicThemes') }}</span></div>
       </header>
 
       <section class="profile-themes">
-        <div class="section-heading"><div><h2>发布的主题</h2><p>浏览 @{{ data.user.login }} 分享的公开作品。</p></div></div>
+        <div class="section-heading"><div><h2>{{ t('profile.themesTitle') }}</h2><p>{{ t('profile.themesDescription', { login: data.user.login }) }}</p></div></div>
         <div v-if="pending" class="profile-grid"><div v-for="index in 3" :key="index" class="profile-skeleton skeleton" /></div>
-        <AppEmptyState v-else-if="error" icon="material-symbols:cloud-off" title="主题加载失败">
-          <button type="button" class="button button--tonal" @click="refresh()">重试</button>
+        <AppEmptyState v-else-if="error" icon="material-symbols:cloud-off" :title="t('profile.themesLoadError')">
+          <button type="button" class="button button--tonal" @click="refresh()">{{ t('common.retry') }}</button>
         </AppEmptyState>
-        <AppEmptyState v-else-if="!data.items.length" icon="material-symbols:palette-outline" title="还没有公开主题" description="这位创作者发布主题后，作品会显示在这里。" />
+        <AppEmptyState v-else-if="!data.items.length" icon="material-symbols:palette-outline" :title="t('profile.emptyTitle')" :description="t('profile.emptyDescription')" />
         <template v-else>
           <div class="profile-grid"><ThemeCard v-for="theme in data.items" :key="theme.id" :theme="theme" /></div>
-          <nav v-if="cursor || data.nextCursor" class="profile-pagination" aria-label="创作者主题分页">
-            <button v-if="cursor" type="button" class="button button--outlined" @click="$router.back()"><Icon name="material-symbols:arrow-back" size="19" /> 上一页</button>
-            <NuxtLink v-if="data.nextCursor" :to="{ query: { cursor: data.nextCursor } }" class="button button--tonal">下一页 <Icon name="material-symbols:arrow-forward" size="19" /></NuxtLink>
+          <nav v-if="cursor || data.nextCursor" class="profile-pagination" :aria-label="t('profile.pagination')">
+            <button v-if="cursor" type="button" class="button button--outlined" @click="$router.back()"><Icon name="material-symbols:arrow-back" size="19" /> {{ t('common.previous') }}</button>
+            <NuxtLink v-if="data.nextCursor" :to="{ query: { cursor: data.nextCursor } }" class="button button--tonal">{{ t('common.next') }} <Icon name="material-symbols:arrow-forward" size="19" /></NuxtLink>
           </nav>
         </template>
       </section>

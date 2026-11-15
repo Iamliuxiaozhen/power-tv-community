@@ -1,5 +1,21 @@
 export default defineNuxtConfig({
-  modules: ['@nuxt/eslint', '@nuxt/icon', 'nitro-cloudflare-dev', 'nuxt-auth-utils'],
+  modules: ['@nuxt/eslint', '@nuxt/icon', 'nitro-cloudflare-dev', 'nuxt-auth-utils', '@nuxtjs/i18n'],
+  i18n: {
+    defaultLocale: 'zh-CN',
+    strategy: 'no_prefix',
+    langDir: 'locales',
+    locales: [
+      { code: 'zh-CN', language: 'zh-CN', name: '简体中文', file: 'zh-CN.json' },
+      { code: 'zh-TW', language: 'zh-TW', name: '繁體中文', file: 'zh-TW.json' },
+      { code: 'en', language: 'en-US', name: 'English', file: 'en.json' },
+    ],
+    detectBrowserLanguage: {
+      useCookie: true,
+      cookieKey: 'power-tv-locale',
+      redirectOn: 'root',
+      fallbackLocale: 'zh-CN',
+    },
+  },
   css: ['@fontsource-variable/roboto', '~/assets/css/main.css'],
   icon: {
     serverBundle: {

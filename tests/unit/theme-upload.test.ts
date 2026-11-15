@@ -40,6 +40,20 @@ describe('theme upload handling', () => {
     expect(error.data).toEqual({ message: 'failure' })
   })
 
+  it('exposes stable message keys for localized validation and repository errors', () => {
+    const validation = capturedError(new ThemeValidationError([
+      { path: '/version', message: '主题版本号无效', code: 'validation.version' },
+    ]))
+    expect(validation.data).toEqual({
+      message: '主题版本号无效',
+      messageKey: 'validation.version',
+      issues: [{ path: '/version', message: '主题版本号无效', code: 'validation.version' }],
+    })
+
+    const repository = capturedError(new ThemeRepositoryError('failure', 'conflict', 'publish.idOrVersionExists'))
+    expect(repository.data).toEqual({ message: 'failure', messageKey: 'publish.idOrVersionExists' })
+  })
+
   it('does not hide unexpected failures', () => {
     const error = new Error('storage unavailable')
     expect(() => throwThemeUploadError(error)).toThrow(error)

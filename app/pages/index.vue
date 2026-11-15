@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import type { ThemeListResponse } from '#shared/community'
 
-useHead({ title: '发现主题' })
+const { t } = useI18n()
+
+useHead({ title: computed(() => t('home.metaTitle')) })
 
 const { data, pending, error, refresh } = await useAsyncData('home-themes', async () => {
   const [latest, popular] = await Promise.all([
@@ -16,23 +18,23 @@ const { data, pending, error, refresh } = await useAsyncData('home-themes', asyn
   <div class="home-page">
     <section class="hero">
       <div class="hero__copy">
-        <p class="eyebrow">POWER YOUR LIVING ROOM</p>
-        <h1>为客厅，<br><span>换个心情。</span></h1>
+        <p class="eyebrow">{{ t('home.heroEyebrow') }}</p>
+        <h1>{{ t('home.heroTitleLine1') }}<br><span>{{ t('home.heroTitleLine2') }}</span></h1>
         <p class="hero__description">
-          为 power-tv 1.5.0 及以上版本发现、分享和下载主题。每一个主题都只包含配色、字体与布局数据，安全且易于安装。
+          {{ t('home.heroDescription') }}
         </p>
         <div class="hero__actions">
           <NuxtLink to="/themes" class="button">
-            浏览主题
+            {{ t('home.browseThemes') }}
             <Icon name="material-symbols:arrow-forward" size="20" />
           </NuxtLink>
           <NuxtLink to="/upload" class="button button--tonal">
             <Icon name="material-symbols:upload" size="20" />
-            发布主题
+            {{ t('home.publishTheme') }}
           </NuxtLink>
         </div>
         <a class="hero__guide" href="https://power-tv.liuxiaozhen.dev" target="_blank" rel="noreferrer">
-          了解 power-tv
+          {{ t('home.learnAbout') }}
           <Icon name="material-symbols:open-in-new" size="16" />
         </a>
       </div>
@@ -42,7 +44,7 @@ const { data, pending, error, refresh } = await useAsyncData('home-themes', asyn
         <div class="hero__dashboard">
           <div class="hero__dashboard-top"><i /><span /><b /></div>
           <div class="hero__dashboard-body">
-            <div class="hero__welcome"><small>GOOD EVENING</small><strong>我的客厅</strong><span /></div>
+            <div class="hero__welcome"><small>{{ t('home.mockEvening') }}</small><strong>{{ t('home.mockRoom') }}</strong><span /></div>
             <div class="hero__metric"><i /><span /><b /></div>
             <div class="hero__metric"><i /><span /><b /></div>
           </div>
@@ -50,42 +52,42 @@ const { data, pending, error, refresh } = await useAsyncData('home-themes', asyn
         <div class="hero__palette">
           <span v-for="color in ['#006a61', '#9ef2e5', '#cce5ff', '#f7faf9']" :key="color" :style="{ background: color }" />
         </div>
-        <div class="hero__floating-chip"><Icon name="material-symbols:check" size="18" /> 安全主题包</div>
+        <div class="hero__floating-chip"><Icon name="material-symbols:check" size="18" /> {{ t('home.securePackage') }}</div>
       </div>
     </section>
 
-    <section class="trust-strip" aria-label="社区特点">
-      <div><Icon name="material-symbols:verified-user-outline" size="23" /><span><strong>自动安全校验</strong><small>格式、图片和路径完整检查</small></span></div>
-      <div><Icon name="material-symbols:history" size="23" /><span><strong>保留历史版本</strong><small>每次发布都可随时下载</small></span></div>
-      <div><Icon name="material-symbols:code" size="23" /><span><strong>开放与协作</strong><small>使用 GitHub 账号即可参与</small></span></div>
+    <section class="trust-strip" :aria-label="t('home.featuresLabel')">
+      <div><Icon name="material-symbols:verified-user-outline" size="23" /><span><strong>{{ t('home.featureSecureTitle') }}</strong><small>{{ t('home.featureSecureDescription') }}</small></span></div>
+      <div><Icon name="material-symbols:history" size="23" /><span><strong>{{ t('home.featureHistoryTitle') }}</strong><small>{{ t('home.featureHistoryDescription') }}</small></span></div>
+      <div><Icon name="material-symbols:code" size="23" /><span><strong>{{ t('home.featureOpenTitle') }}</strong><small>{{ t('home.featureOpenDescription') }}</small></span></div>
     </section>
 
     <div v-if="pending" class="theme-section">
-      <div class="section-heading"><div><h2>最新主题</h2><p>看看社区创作者刚刚发布了什么。</p></div></div>
+      <div class="section-heading"><div><h2>{{ t('home.latestTitle') }}</h2><p>{{ t('home.latestDescription') }}</p></div></div>
       <div class="theme-grid"><div v-for="index in 4" :key="index" class="home-skeleton skeleton" /></div>
     </div>
-    <AppEmptyState v-else-if="error" icon="material-symbols:cloud-off" title="暂时无法加载主题" description="请检查网络连接，然后重试。">
-      <button type="button" class="button button--tonal" @click="refresh()">重新加载</button>
+    <AppEmptyState v-else-if="error" icon="material-symbols:cloud-off" :title="t('home.loadErrorTitle')" :description="t('home.loadErrorDescription')">
+      <button type="button" class="button button--tonal" @click="refresh()">{{ t('home.reload') }}</button>
     </AppEmptyState>
 
     <template v-else>
       <section class="theme-section">
         <div class="section-heading">
-          <div><p class="eyebrow">FRESH FROM THE COMMUNITY</p><h2>最新主题</h2><p>看看社区创作者刚刚发布了什么。</p></div>
-          <NuxtLink to="/themes" class="button button--text">查看全部 <Icon name="material-symbols:arrow-forward" size="19" /></NuxtLink>
+          <div><p class="eyebrow">{{ t('home.latestEyebrow') }}</p><h2>{{ t('home.latestTitle') }}</h2><p>{{ t('home.latestDescription') }}</p></div>
+          <NuxtLink to="/themes" class="button button--text">{{ t('home.viewAll') }} <Icon name="material-symbols:arrow-forward" size="19" /></NuxtLink>
         </div>
         <div v-if="data?.latest.length" class="theme-grid">
           <ThemeCard v-for="theme in data.latest" :key="theme.id" :theme="theme" />
         </div>
-        <AppEmptyState v-else icon="material-symbols:palette-outline" title="等待第一个主题" description="成为第一位向社区分享作品的人。">
-          <NuxtLink to="/upload" class="button">发布主题</NuxtLink>
+        <AppEmptyState v-else icon="material-symbols:palette-outline" :title="t('home.emptyTitle')" :description="t('home.emptyDescription')">
+          <NuxtLink to="/upload" class="button">{{ t('home.emptyAction') }}</NuxtLink>
         </AppEmptyState>
       </section>
 
       <section v-if="data?.popular.length" class="theme-section">
         <div class="section-heading">
-          <div><p class="eyebrow">COMMUNITY FAVORITES</p><h2>热门下载</h2><p>正在被更多客厅使用的主题。</p></div>
-          <NuxtLink to="/themes?sort=downloads" class="button button--text">热门排行 <Icon name="material-symbols:arrow-forward" size="19" /></NuxtLink>
+          <div><p class="eyebrow">{{ t('home.popularEyebrow') }}</p><h2>{{ t('home.popularTitle') }}</h2><p>{{ t('home.popularDescription') }}</p></div>
+          <NuxtLink to="/themes?sort=downloads" class="button button--text">{{ t('home.popularLink') }} <Icon name="material-symbols:arrow-forward" size="19" /></NuxtLink>
         </div>
         <div class="theme-grid">
           <ThemeCard v-for="theme in data.popular" :key="theme.id" :theme="theme" />

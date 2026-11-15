@@ -25,18 +25,18 @@ export function validateThemeManifest(input: unknown): NormalizedThemeManifest {
 
   const issues: ThemeValidationIssue[] = []
   if (input.id.includes('..') || input.id.toLowerCase().startsWith('builtin.')) {
-    issues.push({ path: '/id', message: '主题 ID 不能包含连续点号或使用内置主题前缀' })
+    issues.push({ path: '/id', message: '主题 ID 不能包含连续点号或使用内置主题前缀', code: 'validation.id' })
   }
 
   if (input.layout?.visible?.some(module => !input.layout?.order.includes(module))) {
-    issues.push({ path: '/layout/visible', message: '可见模块必须包含在模块顺序中' })
+    issues.push({ path: '/layout/visible', message: '可见模块必须包含在模块顺序中', code: 'validation.layoutVisible' })
   }
 
   try {
     normalizeVersion(input.version)
   }
   catch {
-    issues.push({ path: '/version', message: '主题版本号无效' })
+    issues.push({ path: '/version', message: '主题版本号无效', code: 'validation.version' })
   }
 
   if (issues.length > 0) throw new ThemeValidationError(issues)
@@ -52,7 +52,13 @@ function formatSchemaIssue(error: ErrorObject): ThemeValidationIssue {
   const field = error.keyword === 'required'
     ? `${path.replace(/\/$/, '')}/${error.params.missingProperty}`.replace(/^\/\//, '/')
     : path
-  return { path: field, message: `主题配置 ${field} ${error.message ?? '无效'}` }
+  const reason = error.message ?? '无效'
+  return {
+    path: field,
+    message: `主题配置 ${field} ${reason}`,
+    code: 'validation.schema',
+    params: { field, reason },
+  }
 }
 
 export function localizedText(value: string | Record<string, string> | undefined, fallback = ''): string {

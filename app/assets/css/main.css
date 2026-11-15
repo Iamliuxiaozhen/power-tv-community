@@ -346,7 +346,8 @@ h1, h2, h3 {
   gap: 8px;
 }
 
-.color-mode-control {
+.color-mode-control,
+.locale-control {
   display: inline-flex;
   height: 40px;
   padding: 0 10px;
@@ -357,12 +358,14 @@ h1, h2, h3 {
   color: var(--md-on-surface-variant);
 }
 
-.color-mode-control:focus-within {
+.color-mode-control:focus-within,
+.locale-control:focus-within {
   outline: 3px solid var(--md-primary);
   outline-offset: 2px;
 }
 
-.color-mode-control select {
+.color-mode-control select,
+.locale-control select {
   max-width: 104px;
   height: 100%;
   padding: 0 2px 0 6px;
@@ -373,7 +376,8 @@ h1, h2, h3 {
   font-size: 13px;
 }
 
-.color-mode-control select option {
+.color-mode-control select option,
+.locale-control select option {
   background: var(--md-surface-container);
   color: var(--md-on-surface);
 }
@@ -868,20 +872,23 @@ h1, h2, h3 {
     display: none;
   }
 
-  .color-mode-control {
+  .color-mode-control,
+  .locale-control {
     width: 40px;
     padding: 0;
     justify-content: center;
   }
 
-  .color-mode-control select {
+  .color-mode-control select,
+  .locale-control select {
     position: absolute;
     width: 40px;
     height: 40px;
     opacity: 0;
   }
 
-  .color-mode-control > .icon:last-child {
+  .color-mode-control > .icon:last-child,
+  .locale-control > .icon:last-child {
     display: none;
   }
 

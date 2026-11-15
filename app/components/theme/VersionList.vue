@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { ThemeVersionSummary } from '#shared/community'
 
+const { t } = useI18n()
+const { formatDate } = useFormatters()
 const props = defineProps<{
   themeId: string
   versions: ThemeVersionSummary[]
@@ -24,11 +26,11 @@ function detailTarget(version: string) {
   <section id="versions" class="version-section" aria-labelledby="version-heading">
     <div class="section-heading">
       <div>
-        <p class="eyebrow">IMMUTABLE RELEASES</p>
-        <h2 id="version-heading">历史版本</h2>
-        <p>每个发布版本都会永久保留，不会被后续上传覆盖。</p>
+        <p class="eyebrow">{{ t('versions.eyebrow') }}</p>
+        <h2 id="version-heading">{{ t('versions.title') }}</h2>
+        <p>{{ t('versions.description') }}</p>
       </div>
-      <span class="chip"><Icon name="material-symbols:history" size="18" /> {{ versions.length }} 个版本</span>
+      <span class="chip"><Icon name="material-symbols:history" size="18" /> {{ t('versions.count', { count: versions.length }) }}</span>
     </div>
 
     <div class="version-list">
@@ -39,13 +41,13 @@ function detailTarget(version: string) {
             <NuxtLink :to="detailTarget(version.version)" :aria-current="selectedVersion === version.version ? 'true' : undefined">
               v{{ version.version }}
             </NuxtLink>
-            <span v-if="version.version === latestVersion" class="badge">最新版</span>
+            <span v-if="version.version === latestVersion" class="badge">{{ t('versions.latest') }}</span>
           </div>
-          <p>{{ formatDate(version.createdAt) }} · 需要 power-tv {{ version.metadata.minAppVersion ?? '1.5.0' }}+</p>
+          <p>{{ formatDate(version.createdAt) }} · {{ t('versions.requires', { version: version.metadata.minAppVersion ?? '1.5.0' }) }}</p>
         </div>
         <span class="version-row__size">{{ formatByteSize(version.byteSize) }}</span>
-        <a :href="downloadUrl(version.version)" class="button button--tonal button--small" :aria-label="`下载版本 ${version.version}`">
-          <Icon name="material-symbols:download" size="18" /> <span>下载</span>
+        <a :href="downloadUrl(version.version)" class="button button--tonal button--small" :aria-label="t('versions.downloadAria', { version: version.version })">
+          <Icon name="material-symbols:download" size="18" /> <span>{{ t('versions.download') }}</span>
         </a>
       </article>
     </div>
