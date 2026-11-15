@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { t } = useI18n()
 const { snackbar, dismissSnackbar } = useSnackbar()
 let timeout: ReturnType<typeof setTimeout> | undefined
 
@@ -16,7 +17,7 @@ onBeforeUnmount(() => {
   <Transition name="snackbar">
     <div v-if="snackbar" :key="snackbar.id" class="snackbar" role="status" aria-live="polite">
       <span>{{ snackbar.message }}</span>
-      <button type="button" class="icon-button" aria-label="关闭提示" @click="dismissSnackbar">
+      <button type="button" class="icon-button" :aria-label="t('common.closeNotification')" @click="dismissSnackbar">
         <Icon name="material-symbols:close" size="20" />
       </button>
     </div>

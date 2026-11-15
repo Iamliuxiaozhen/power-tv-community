@@ -1,0 +1,54 @@
+{
+  "app": {
+    "title": "power-tv 主题社区",
+    "titleTemplate": "{title} · power-tv 主题社区",
+    "description": "为 power-tv 1.5.0 及以上版本发现、发布和下载主题。",
+    "skipToContent": "跳到主要内容"
+  },
+  "common": {
+    "cancel": "取消",
+    "confirm": "确认",
+    "closeDialog": "关闭对话框",
+    "closeNotification": "关闭提示",
+    "retry": "重试",
+    "previous": "上一页",
+    "next": "下一页",
+    "download": "下载",
+    "loading": "正在加载…"
+  },
+  "header": {
+    "brandHome": "power-tv 主题社区首页",
+    "brandSubtitle": "主题社区",
+    "mainNavigation": "主要导航",
+    "colorMode": "界面主题",
+    "language": "界面语言",
+    "sessionLoading": "正在读取登录状态",
+    "dashboard": "个人面板",
+    "logout": "退出登录",
+    "login": "GitHub 登录"
+  },
+  "nav": {
+    "main": "移动端主要导航",
+    "home": "首页",
+    "browseThemes": "浏览主题",
+    "guide": "制作指南",
+    "uploadTheme": "发布主题",
+    "themes": "主题",
+    "upload": "发布",
+    "dashboard": "我的"
+  },
+  "footer": {
+    "brand": "power-tv 主题社区",
+    "tagline": "发现、分享和管理你的电视主题。",
+    "links": "相关链接",
+    "guide": "主题制作指南",
+    "website": "power-tv 官网",
+    "appSource": "应用源码",
+    "communitySource": "社区源码"
+  },
+  "colorMode": {
+    "system": "跟随系统",
+    "light": "浅色模式",
+    "dark": "深色模式"
+  }
+}

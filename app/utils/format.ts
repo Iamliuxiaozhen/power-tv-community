@@ -10,6 +10,6 @@ export function formatByteSize(value: number): string {
   return `${size >= 10 ? size.toFixed(1) : size.toFixed(2)} ${unit}`
 }
 
-export function formatDate(value: string): string {
-  return new Intl.DateTimeFormat('zh-CN', { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(value))
+export function formatDate(value: string, locale = 'zh-CN'): string {
+  return new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(value))
 }

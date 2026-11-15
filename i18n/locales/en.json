@@ -1,0 +1,54 @@
+{
+  "app": {
+    "title": "power-tv Theme Community",
+    "titleTemplate": "{title} · power-tv Theme Community",
+    "description": "Discover, publish, and download themes for power-tv 1.5.0 and later.",
+    "skipToContent": "Skip to main content"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "closeDialog": "Close dialog",
+    "closeNotification": "Dismiss notification",
+    "retry": "Retry",
+    "previous": "Previous",
+    "next": "Next",
+    "download": "Download",
+    "loading": "Loading…"
+  },
+  "header": {
+    "brandHome": "power-tv Theme Community home",
+    "brandSubtitle": "Theme Community",
+    "mainNavigation": "Main navigation",
+    "colorMode": "Appearance",
+    "language": "Language",
+    "sessionLoading": "Loading sign-in status",
+    "dashboard": "Dashboard",
+    "logout": "Sign out",
+    "login": "Sign in with GitHub"
+  },
+  "nav": {
+    "main": "Mobile main navigation",
+    "home": "Home",
+    "browseThemes": "Browse themes",
+    "guide": "Authoring guide",
+    "uploadTheme": "Publish a theme",
+    "themes": "Themes",
+    "upload": "Publish",
+    "dashboard": "Me"
+  },
+  "footer": {
+    "brand": "power-tv Theme Community",
+    "tagline": "Discover, share, and manage your TV themes.",
+    "links": "Related links",
+    "guide": "Theme authoring guide",
+    "website": "power-tv website",
+    "appSource": "App source",
+    "communitySource": "Community source"
+  },
+  "colorMode": {
+    "system": "System",
+    "light": "Light",
+    "dark": "Dark"
+  }
+}
