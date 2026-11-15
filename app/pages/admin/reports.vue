@@ -16,10 +16,11 @@ const status = computed<ReportStatus>(() => {
   return value === 'resolved' || value === 'dismissed' ? value : 'pending'
 })
 const cursor = computed(() => typeof route.query.cursor === 'string' ? route.query.cursor : undefined)
+const requestFetch = useRequestFetch()
 const { data, pending, error, refresh } = await useAsyncData<AdminReportListResponse | null>(
   'admin-report-queue',
   () => loggedIn.value
-    ? $fetch<AdminReportListResponse>('/api/admin/reports', {
+    ? requestFetch<AdminReportListResponse>('/api/admin/reports', {
         query: { status: status.value, cursor: cursor.value, limit: 20 },
       })
     : Promise.resolve(null),

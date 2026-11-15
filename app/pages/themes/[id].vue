@@ -5,9 +5,10 @@ const route = useRoute()
 const { loggedIn, loginUrl, user } = useAuth()
 const { showSnackbar } = useSnackbar()
 const themeId = computed(() => String(route.params.id))
+const requestFetch = useRequestFetch()
 const { data, pending, error, refresh } = await useAsyncData(
   'theme-details',
-  () => $fetch<ThemeDetailResponse>(`/api/themes/${encodeURIComponent(themeId.value)}`),
+  () => requestFetch<ThemeDetailResponse>(`/api/themes/${encodeURIComponent(themeId.value)}`),
   { watch: [themeId] },
 )
 const selectedVersion = computed(() => {

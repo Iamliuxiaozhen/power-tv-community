@@ -8,10 +8,11 @@ const tab = computed(() => {
   return value === 'likes' || value === 'favorites' ? value : 'themes'
 })
 const cursor = computed(() => typeof route.query.cursor === 'string' ? route.query.cursor : undefined)
+const requestFetch = useRequestFetch()
 const { data, pending, error, refresh } = await useAsyncData<DashboardResponse | null>(
   'personal-dashboard',
   () => loggedIn.value
-    ? $fetch<DashboardResponse>('/api/me/dashboard', { query: { cursor: cursor.value, limit: 12 } })
+    ? requestFetch<DashboardResponse>('/api/me/dashboard', { query: { cursor: cursor.value, limit: 12 } })
     : Promise.resolve(null),
   { watch: [cursor, loggedIn] },
 )
