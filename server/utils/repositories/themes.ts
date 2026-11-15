@@ -14,9 +14,12 @@ export type ThemeSort = 'latest' | 'downloads' | 'likes'
 export type ThemeRepositoryErrorCode = 'not_found' | 'forbidden' | 'conflict' | 'deleted'
 
 export class ThemeRepositoryError extends Error {
-  constructor(message: string, readonly code: ThemeRepositoryErrorCode) {
+  readonly messageKey: string | undefined
+
+  constructor(message: string, readonly code: ThemeRepositoryErrorCode, messageKey?: string) {
     super(message)
     this.name = 'ThemeRepositoryError'
+    this.messageKey = messageKey
   }
 }
 
@@ -100,21 +103,21 @@ interface PublishThemeInput {
 export async function publishTheme(db: D1Database, bucket: R2Bucket, params: PublishThemeInput) {
   const manifest = params.input.manifest
   if (params.expectedThemeId && params.expectedThemeId !== manifest.id) {
-    throw new ThemeRepositoryError('上传包的主题 ID 与更新目标不一致', 'conflict')
+    throw new ThemeRepositoryError('上传包的主题 ID 与更新目标不一致', 'conflict', 'publish.idMismatch')
   }
 
   const existing = await getThemeRecord(db, manifest.id, true)
   if (existing && existing.owner_id !== params.ownerId) {
-    throw new ThemeRepositoryError('只有原上传者可以更新此主题', 'forbidden')
+    throw new ThemeRepositoryError('只有原上传者可以更新此主题', 'forbidden', 'publish.notOwner')
   }
   if (existing?.status === 'deleted') {
-    throw new ThemeRepositoryError('已删除的主题不能发布新版本', 'deleted')
+    throw new ThemeRepositoryError('已删除的主题不能发布新版本', 'deleted', 'publish.deleted')
   }
 
   const previousVersions = await db.prepare('SELECT version, major, minor, patch FROM theme_versions WHERE theme_id = ?')
     .bind(manifest.id).all<Pick<VersionRow, 'version' | 'major' | 'minor' | 'patch'>>()
   if (previousVersions.results.some(row => row.version === manifest.version)) {
-    throw new ThemeRepositoryError('此版本已经发布，历史版本不可覆盖', 'conflict')
+    throw new ThemeRepositoryError('此版本已经发布，历史版本不可覆盖', 'conflict', 'publish.versionExists')
   }
 
   const stored = await storeThemeObjects(bucket, manifest.id, manifest.version, params.input)
@@ -175,7 +178,7 @@ export async function publishTheme(db: D1Database, bucket: R2Bucket, params: Pub
   catch (error) {
     await removeThemeObjects(bucket, stored.keys)
     if (error instanceof Error && error.message.includes('UNIQUE constraint failed')) {
-      throw new ThemeRepositoryError('主题 ID 或版本已经存在', 'conflict')
+      throw new ThemeRepositoryError('主题 ID 或版本已经存在', 'conflict', 'publish.idOrVersionExists')
     }
     throw error
   }

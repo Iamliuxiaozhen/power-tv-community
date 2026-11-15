@@ -529,5 +529,53 @@
       "other": "Other issue",
       "otherDescription": "Another issue that needs moderator review"
     }
+  },
+  "errors": {
+    "issue": {
+      "validation": {
+        "schema": "Theme configuration {field} {reason}",
+        "id": "Theme ID cannot contain consecutive dots or use the built-in theme prefix",
+        "layoutVisible": "Visible modules must be included in the module order",
+        "version": "Theme version is invalid"
+      },
+      "archive": {
+        "emptyOrTooLarge": "The theme package is empty, or the archive exceeds 10 MiB",
+        "rawJsonTooLarge": "A raw JSON theme cannot exceed 256 KiB",
+        "missingManifest": "The archive root is missing theme.json",
+        "manifestTooLarge": "theme.json cannot exceed 256 KiB",
+        "rawJsonBackdrop": "A raw JSON theme cannot reference a backdrop image. Use .ptheme or .zip instead.",
+        "backdropNotFound": "The backdrop image was not found or its format is unsupported",
+        "invalidManifestJson": "theme.json must be valid UTF-8 JSON",
+        "zipDirectoryInvalid": "The ZIP directory is corrupt or unsupported",
+        "zipUnsupported": "Multi-disk and ZIP64 archives are not supported",
+        "zipTooManyEntries": "A ZIP may contain at most {limit} entries",
+        "zipTrailingData": "The ZIP has invalid trailing data",
+        "zipCentralDirectoryInvalid": "The ZIP central directory is corrupt",
+        "zipEncrypted": "Encrypted ZIP entries are not supported",
+        "zipCompression": "ZIP entries must use stored or Deflate compression",
+        "zipEntryLength": "A ZIP entry has an invalid length",
+        "zipEntryNameEncoding": "ZIP entry paths must be valid UTF-8",
+        "zipDuplicateEntry": "Duplicate ZIP entry: {name}",
+        "executableEntry": "The theme package cannot contain executable code or scripts: {name}",
+        "zipCentralDirectorySize": "The ZIP central directory size is inconsistent",
+        "unsafePath": "Unsafe ZIP entry path: {name}",
+        "zipLocalEntryMismatch": "A ZIP local entry does not match the central directory",
+        "zipDuplicateLocalEntry": "Duplicate local ZIP entry: {name}",
+        "uncompressedTooLarge": "The ZIP cannot extract to more than 8 MiB",
+        "imageTooLarge": "Image exceeds 4 MiB: {name}",
+        "zipEntryCountMismatch": "The number of local ZIP entries does not match the central directory",
+        "zipCorrupt": "The ZIP archive is corrupt or cannot be extracted",
+        "imageTypeMismatch": "The image format does not match its extension: {name}",
+        "imageTooManyPixels": "Image exceeds 4 megapixels: {name}",
+        "imageCorrupt": "The image is corrupt or its format is unsupported: {name}"
+      },
+      "publish": {
+        "idMismatch": "The uploaded package ID does not match the update target",
+        "notOwner": "Only the original uploader can update this theme",
+        "deleted": "A deleted theme cannot publish a new version",
+        "versionExists": "This version is already published and cannot be overwritten",
+        "idOrVersionExists": "The theme ID or version already exists"
+      }
+    }
   }
 }

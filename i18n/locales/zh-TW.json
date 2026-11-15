@@ -529,5 +529,53 @@
       "other": "其他問題",
       "otherDescription": "其他需要管理員檢查的問題"
     }
+  },
+  "errors": {
+    "issue": {
+      "validation": {
+        "schema": "主題設定 {field} {reason}",
+        "id": "主題 ID 不能包含連續點號或使用內建主題前綴",
+        "layoutVisible": "可見模組必須包含在模組順序中",
+        "version": "主題版本號無效"
+      },
+      "archive": {
+        "emptyOrTooLarge": "主題包不能為空且壓縮包大小不能超過 10 MiB",
+        "rawJsonTooLarge": "裸 JSON 主題不能超過 256 KiB",
+        "missingManifest": "壓縮包根目錄缺少 theme.json",
+        "manifestTooLarge": "theme.json 不能超過 256 KiB",
+        "rawJsonBackdrop": "裸 JSON 主題不能引用背景圖片，請使用 .ptheme 或 .zip",
+        "backdropNotFound": "找不到背景圖片或圖片格式不受支援",
+        "invalidManifestJson": "theme.json 必須是有效的 UTF-8 JSON",
+        "zipDirectoryInvalid": "ZIP 目錄損壞或不受支援",
+        "zipUnsupported": "不支援多磁碟或 ZIP64 壓縮包",
+        "zipTooManyEntries": "ZIP 最多允許 {limit} 個項目",
+        "zipTrailingData": "ZIP 結尾包含無效資料",
+        "zipCentralDirectoryInvalid": "ZIP 中央目錄損壞",
+        "zipEncrypted": "不支援加密 ZIP 項目",
+        "zipCompression": "ZIP 僅支援儲存或 Deflate 壓縮",
+        "zipEntryLength": "ZIP 項目長度無效",
+        "zipEntryNameEncoding": "ZIP 項目路徑必須是有效 UTF-8",
+        "zipDuplicateEntry": "ZIP 包含重複項目：{name}",
+        "executableEntry": "主題包不能包含可執行程式碼或指令碼：{name}",
+        "zipCentralDirectorySize": "ZIP 中央目錄大小不一致",
+        "unsafePath": "ZIP 項目路徑不安全：{name}",
+        "zipLocalEntryMismatch": "ZIP 本機項目與中央目錄不一致",
+        "zipDuplicateLocalEntry": "ZIP 包含重複本機項目：{name}",
+        "uncompressedTooLarge": "ZIP 實際解壓總量不能超過 8 MiB",
+        "imageTooLarge": "圖片不能超過 4 MiB：{name}",
+        "zipEntryCountMismatch": "ZIP 本機項目數量與中央目錄不一致",
+        "zipCorrupt": "ZIP 壓縮包損壞或無法解壓",
+        "imageTypeMismatch": "圖片真實格式與副檔名不符：{name}",
+        "imageTooManyPixels": "圖片不能超過 400 萬像素：{name}",
+        "imageCorrupt": "圖片損壞或格式不受支援：{name}"
+      },
+      "publish": {
+        "idMismatch": "上傳包的主題 ID 與更新目標不一致",
+        "notOwner": "只有原上傳者可以更新此主題",
+        "deleted": "已刪除的主題不能發布新版本",
+        "versionExists": "此版本已經發布，歷史版本不可覆蓋",
+        "idOrVersionExists": "主題 ID 或版本已經存在"
+      }
+    }
   }
 }

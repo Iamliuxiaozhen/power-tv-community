@@ -529,5 +529,53 @@
       "other": "其他问题",
       "otherDescription": "其他需要管理员检查的问题"
     }
+  },
+  "errors": {
+    "issue": {
+      "validation": {
+        "schema": "主题配置 {field} {reason}",
+        "id": "主题 ID 不能包含连续点号或使用内置主题前缀",
+        "layoutVisible": "可见模块必须包含在模块顺序中",
+        "version": "主题版本号无效"
+      },
+      "archive": {
+        "emptyOrTooLarge": "主题包不能为空且压缩包大小不能超过 10 MiB",
+        "rawJsonTooLarge": "裸 JSON 主题不能超过 256 KiB",
+        "missingManifest": "压缩包根目录缺少 theme.json",
+        "manifestTooLarge": "theme.json 不能超过 256 KiB",
+        "rawJsonBackdrop": "裸 JSON 主题不能引用背景图片，请使用 .ptheme 或 .zip",
+        "backdropNotFound": "找不到背景图片或图片格式不受支持",
+        "invalidManifestJson": "theme.json 必须是有效的 UTF-8 JSON",
+        "zipDirectoryInvalid": "ZIP 目录损坏或不受支持",
+        "zipUnsupported": "不支持多磁盘或 ZIP64 压缩包",
+        "zipTooManyEntries": "ZIP 最多允许 {limit} 个条目",
+        "zipTrailingData": "ZIP 末尾包含无效数据",
+        "zipCentralDirectoryInvalid": "ZIP 中央目录损坏",
+        "zipEncrypted": "不支持加密 ZIP 条目",
+        "zipCompression": "ZIP 仅支持存储或 Deflate 压缩",
+        "zipEntryLength": "ZIP 条目长度无效",
+        "zipEntryNameEncoding": "ZIP 条目路径必须是有效 UTF-8",
+        "zipDuplicateEntry": "ZIP 包含重复条目：{name}",
+        "executableEntry": "主题包不能包含可执行代码或脚本：{name}",
+        "zipCentralDirectorySize": "ZIP 中央目录大小不一致",
+        "unsafePath": "ZIP 条目路径不安全：{name}",
+        "zipLocalEntryMismatch": "ZIP 本地条目与中央目录不一致",
+        "zipDuplicateLocalEntry": "ZIP 包含重复本地条目：{name}",
+        "uncompressedTooLarge": "ZIP 实际解压总量不能超过 8 MiB",
+        "imageTooLarge": "图片不能超过 4 MiB：{name}",
+        "zipEntryCountMismatch": "ZIP 本地条目数量与中央目录不一致",
+        "zipCorrupt": "ZIP 压缩包损坏或无法解压",
+        "imageTypeMismatch": "图片真实格式与扩展名不符：{name}",
+        "imageTooManyPixels": "图片不能超过 400 万像素：{name}",
+        "imageCorrupt": "图片损坏或格式不受支持：{name}"
+      },
+      "publish": {
+        "idMismatch": "上传包的主题 ID 与更新目标不一致",
+        "notOwner": "只有原上传者可以更新此主题",
+        "deleted": "已删除的主题不能发布新版本",
+        "versionExists": "此版本已经发布，历史版本不可覆盖",
+        "idOrVersionExists": "主题 ID 或版本已经存在"
+      }
+    }
   }
 }

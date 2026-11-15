@@ -9,7 +9,7 @@ const props = defineProps<{
   currentVersion?: string | undefined
 }>()
 
-const { t } = useI18n()
+const { t, te } = useI18n()
 const MAX_FILE_BYTES = 10 * 1024 * 1024
 const file = shallowRef<File>()
 const dragActive = ref(false)
@@ -25,8 +25,21 @@ const endpoint = computed(() => props.themeId
 interface UploadErrorBody {
   data?: {
     message?: string
+    messageKey?: string
     issues?: ThemeValidationIssue[]
   }
+}
+
+function issueMessage(issue: ThemeValidationIssue): string {
+  if (!issue.code) return issue.message
+  const key = `errors.issue.${issue.code}`
+  return te(key) ? t(key, issue.params ?? {}) : issue.message
+}
+
+function errorMessageFromKey(key: string | undefined): string | undefined {
+  if (!key) return undefined
+  const lookup = `errors.issue.${key}`
+  return te(lookup) ? t(lookup) : undefined
 }
 
 function selectFile(selected: File | undefined): void {
@@ -99,10 +112,12 @@ async function submit(): Promise<void> {
       413: t('uploadForm.error.tooLarge'),
       429: t('uploadForm.error.rateLimited'),
     }
-    errorMessage.value = failure.data?.data?.message
+    const errorBody = failure.data?.data
+    errorMessage.value = errorMessageFromKey(errorBody?.messageKey)
+      ?? errorBody?.message
       ?? statusMessages[failure.status ?? 0]
       ?? t('uploadForm.error.generic')
-    errorIssues.value = failure.data?.data?.issues ?? []
+    errorIssues.value = errorBody?.issues ?? []
   }
   finally {
     submitting.value = false
@@ -165,7 +180,7 @@ async function submit(): Promise<void> {
         <p>{{ errorMessage }}</p>
         <ul v-if="errorIssues.length">
           <li v-for="(issue, index) in errorIssues" :key="`${issue.path}-${index}`">
-            <code>{{ issue.path }}</code> {{ issue.message }}
+            <code>{{ issue.path }}</code> {{ issueMessage(issue) }}
           </li>
         </ul>
       </div>
