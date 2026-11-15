@@ -93,6 +93,7 @@ export interface DashboardStats {
 
 export interface DashboardResponse {
   themes: ThemeListResponse
+  liked: ThemeSummary[]
   favorites: ThemeSummary[]
   stats: DashboardStats
 }

@@ -3,7 +3,10 @@ import type { DashboardResponse } from '#shared/community'
 
 const route = useRoute()
 const { loggedIn, loginUrl, ready, user } = useAuth()
-const tab = computed(() => route.query.tab === 'favorites' ? 'favorites' : 'themes')
+const tab = computed(() => {
+  const value = route.query.tab
+  return value === 'likes' || value === 'favorites' ? value : 'themes'
+})
 const cursor = computed(() => typeof route.query.cursor === 'string' ? route.query.cursor : undefined)
 const { data, pending, error, refresh } = await useAsyncData<DashboardResponse | null>(
   'personal-dashboard',
@@ -79,13 +82,17 @@ useHead({ title: '个人面板' })
           <Icon name="material-symbols:deployed-code-outline" size="20" /> 我的发布
           <span>{{ data.stats.themes }}</span>
         </NuxtLink>
+        <NuxtLink :to="{ query: { tab: 'likes' } }" :class="{ 'is-active': tab === 'likes' }" :aria-current="tab === 'likes' ? 'page' : undefined">
+          <Icon name="material-symbols:favorite-outline" size="20" /> 我的点赞
+          <span>{{ data.liked.length }}</span>
+        </NuxtLink>
         <NuxtLink :to="{ query: { tab: 'favorites' } }" :class="{ 'is-active': tab === 'favorites' }" :aria-current="tab === 'favorites' ? 'page' : undefined">
           <Icon name="material-symbols:bookmark-outline" size="20" /> 我的收藏
           <span>{{ data.stats.favorites }}</span>
         </NuxtLink>
       </nav>
 
-      <section class="dashboard-content" :aria-label="tab === 'themes' ? '我的发布' : '我的收藏'">
+      <section class="dashboard-content" :aria-label="tab === 'themes' ? '我的发布' : tab === 'likes' ? '我的点赞' : '我的收藏'">
         <div v-if="pending" class="dashboard-grid">
           <div v-for="index in 3" :key="index" class="dashboard-skeleton skeleton" />
         </div>
@@ -128,7 +135,7 @@ useHead({ title: '个人面板' })
           </template>
         </template>
 
-        <template v-else>
+        <template v-else-if="tab === 'favorites'">
           <AppEmptyState
             v-if="!data.favorites.length"
             icon="material-symbols:bookmark-outline"
@@ -139,6 +146,20 @@ useHead({ title: '个人面板' })
           </AppEmptyState>
           <div v-else class="dashboard-grid">
             <ThemeCard v-for="theme in data.favorites" :key="theme.id" :theme="theme" />
+          </div>
+        </template>
+
+        <template v-else>
+          <AppEmptyState
+            v-if="!data.liked.length"
+            icon="material-symbols:favorite-outline"
+            title="还没有点赞主题"
+            description="在主题详情页点亮心形按钮，把喜欢的作品加入这个列表。"
+          >
+            <NuxtLink to="/themes" class="button button--tonal">发现主题</NuxtLink>
+          </AppEmptyState>
+          <div v-else class="dashboard-grid">
+            <ThemeCard v-for="theme in data.liked" :key="theme.id" :theme="theme" />
           </div>
         </template>
       </section>
@@ -405,6 +426,23 @@ useHead({ title: '个人面板' })
 
   .dashboard-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-tabs {
+    gap: 0;
+  }
+
+  .dashboard-tabs a {
+    min-width: 0;
+    padding-inline: 8px;
+    font-size: 12px;
+    gap: 6px;
+  }
+
+  .dashboard-tabs a > span {
+    display: none;
   }
 }
 

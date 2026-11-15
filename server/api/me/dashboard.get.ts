@@ -18,9 +18,10 @@ export default defineEventHandler(async (event): Promise<DashboardResponse> => {
       limit: parsed.data.limit,
       ...(parsed.data.cursor ? { cursor: parsed.data.cursor } : {}),
     })
+    const liked = await listReactedThemes(db, user.githubId, 'likes')
     const favorites = await listReactedThemes(db, user.githubId, 'favorites')
     const stats = await getDashboardStats(db, user.githubId)
-    return { themes, favorites, stats }
+    return { themes, liked, favorites, stats }
   }
   catch (error) {
     if (parsed.data.cursor && error instanceof ThemeRepositoryError && error.message === '分页游标无效') {
