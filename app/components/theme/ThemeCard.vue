@@ -2,6 +2,7 @@
 import type { CSSProperties } from 'vue'
 import type { ThemeSummary } from '#shared/community'
 
+const { t } = useI18n()
 const props = defineProps<{ theme: ThemeSummary }>()
 const previewStyle = computed(() => ({
   '--preview-primary': props.theme.colors.light.primary,
@@ -43,15 +44,15 @@ const previewStyle = computed(() => ({
         </div>
         <span class="badge">v{{ theme.version }}</span>
       </div>
-      <p class="theme-card__description">{{ theme.description || '这个主题还没有添加描述。' }}</p>
+      <p class="theme-card__description">{{ theme.description || t('themeCard.noDescription') }}</p>
       <div class="theme-card__footer">
         <NuxtLink :to="`/users/${encodeURIComponent(theme.owner.login)}`" class="theme-card__author">
           <img :src="theme.owner.avatarUrl" alt="" width="28" height="28" loading="lazy">
           <span>{{ theme.owner.displayName || theme.owner.login }}</span>
         </NuxtLink>
-        <div class="theme-card__metrics" aria-label="主题统计">
-          <span title="下载量"><Icon name="material-symbols:download" size="17" />{{ theme.downloads }}</span>
-          <span title="点赞数"><Icon name="material-symbols:favorite-outline" size="17" />{{ theme.likes }}</span>
+        <div class="theme-card__metrics" :aria-label="t('themeCard.stats')">
+          <span :title="t('themeCard.downloads')"><Icon name="material-symbols:download" size="17" />{{ theme.downloads }}</span>
+          <span :title="t('themeCard.likes')"><Icon name="material-symbols:favorite-outline" size="17" />{{ theme.likes }}</span>
         </div>
       </div>
     </div>

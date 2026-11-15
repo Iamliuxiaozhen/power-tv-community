@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ThemeListResponse } from '#shared/community'
 
+const { t } = useI18n()
 const route = useRoute()
 const search = ref(typeof route.query.q === 'string' ? route.query.q : '')
 const sort = computed(() => typeof route.query.sort === 'string' && ['downloads', 'likes'].includes(route.query.sort) ? route.query.sort : 'latest')
@@ -16,7 +17,7 @@ const { data, pending, error, refresh } = await useAsyncData(
   { watch: [query] },
 )
 
-useHead({ title: computed(() => query.value.q ? `搜索：${query.value.q}` : '浏览主题') })
+useHead({ title: computed(() => query.value.q ? t('catalog.searchTitle', { query: query.value.q }) : t('catalog.metaTitle')) })
 watch(() => route.query.q, value => { search.value = typeof value === 'string' ? value : '' })
 
 function submitSearch() {
@@ -34,61 +35,61 @@ function changeSort(event: Event) {
   <div class="catalog-page">
     <header class="catalog-header">
       <div>
-        <p class="eyebrow">THEME CATALOG</p>
-        <h1>寻找下一种客厅风格</h1>
-        <p>搜索主题名称、ID 或描述，找到适合你的配色与布局。</p>
+        <p class="eyebrow">{{ t('catalog.eyebrow') }}</p>
+        <h1>{{ t('catalog.title') }}</h1>
+        <p>{{ t('catalog.description') }}</p>
       </div>
-      <NuxtLink to="/upload" class="button"><Icon name="material-symbols:add" size="20" /> 发布主题</NuxtLink>
+      <NuxtLink to="/upload" class="button"><Icon name="material-symbols:add" size="20" /> {{ t('catalog.publish') }}</NuxtLink>
     </header>
 
-    <section class="catalog-controls" aria-label="主题筛选">
+    <section class="catalog-controls" :aria-label="t('catalog.filters')">
       <form class="catalog-search" role="search" @submit.prevent="submitSearch">
         <Icon name="material-symbols:search" size="22" aria-hidden="true" />
-        <label for="theme-search" class="visually-hidden">搜索主题</label>
-        <input id="theme-search" v-model="search" type="search" maxlength="100" placeholder="搜索主题、ID 或描述…">
-        <button v-if="search" type="button" class="icon-button" aria-label="清空搜索" @click="search = ''; submitSearch()">
+        <label for="theme-search" class="visually-hidden">{{ t('catalog.searchLabel') }}</label>
+        <input id="theme-search" v-model="search" type="search" maxlength="100" :placeholder="t('catalog.searchPlaceholder')">
+        <button v-if="search" type="button" class="icon-button" :aria-label="t('catalog.clearSearch')" @click="search = ''; submitSearch()">
           <Icon name="material-symbols:close" size="20" />
         </button>
-        <button type="submit" class="button button--small">搜索</button>
+        <button type="submit" class="button button--small">{{ t('catalog.search') }}</button>
       </form>
       <label class="catalog-sort">
         <Icon name="material-symbols:sort" size="20" />
-        <span class="visually-hidden">排序方式</span>
-        <select :value="sort" aria-label="排序方式" @change="changeSort">
-          <option value="latest">最新发布</option>
-          <option value="downloads">下载最多</option>
-          <option value="likes">点赞最多</option>
+        <span class="visually-hidden">{{ t('catalog.sortLabel') }}</span>
+        <select :value="sort" :aria-label="t('catalog.sortLabel')" @change="changeSort">
+          <option value="latest">{{ t('catalog.sortLatest') }}</option>
+          <option value="downloads">{{ t('catalog.sortDownloads') }}</option>
+          <option value="likes">{{ t('catalog.sortLikes') }}</option>
         </select>
         <Icon name="material-symbols:expand-more" size="19" />
       </label>
     </section>
 
     <div class="catalog-result-meta" aria-live="polite">
-      <span v-if="query.q">“{{ query.q }}”的搜索结果</span>
-      <span v-else>全部公开主题</span>
-      <span v-if="data && !pending">{{ data.items.length }} 个主题</span>
+      <span v-if="query.q">{{ t('catalog.resultsFor', { query: query.q }) }}</span>
+      <span v-else>{{ t('catalog.allThemes') }}</span>
+      <span v-if="data && !pending">{{ t('catalog.themeCount', { count: data.items.length }) }}</span>
     </div>
 
     <div v-if="pending" class="catalog-grid">
       <div v-for="index in 6" :key="index" class="catalog-skeleton skeleton" />
     </div>
-    <AppEmptyState v-else-if="error" icon="material-symbols:cloud-off" title="主题加载失败" description="目录暂时不可用，请稍后重试。">
-      <button type="button" class="button button--tonal" @click="refresh()">重试</button>
+    <AppEmptyState v-else-if="error" icon="material-symbols:cloud-off" :title="t('catalog.loadErrorTitle')" :description="t('catalog.loadErrorDescription')">
+      <button type="button" class="button button--tonal" @click="refresh()">{{ t('common.retry') }}</button>
     </AppEmptyState>
-    <AppEmptyState v-else-if="!data?.items.length" icon="material-symbols:search-off" :title="query.q ? '没有找到匹配的主题' : '还没有公开主题'" :description="query.q ? '试试更短的关键词，或浏览全部主题。' : '发布第一个主题，让社区从这里开始。'">
-      <NuxtLink v-if="query.q" to="/themes" class="button button--tonal">查看全部主题</NuxtLink>
-      <NuxtLink v-else to="/upload" class="button">发布主题</NuxtLink>
+    <AppEmptyState v-else-if="!data?.items.length" icon="material-symbols:search-off" :title="query.q ? t('catalog.noMatchTitle') : t('catalog.emptyTitle')" :description="query.q ? t('catalog.noMatchDescription') : t('catalog.emptyDescription')">
+      <NuxtLink v-if="query.q" to="/themes" class="button button--tonal">{{ t('catalog.viewAll') }}</NuxtLink>
+      <NuxtLink v-else to="/upload" class="button">{{ t('catalog.emptyAction') }}</NuxtLink>
     </AppEmptyState>
     <template v-else>
       <div class="catalog-grid">
         <ThemeCard v-for="theme in data.items" :key="theme.id" :theme="theme" />
       </div>
-      <nav v-if="query.cursor || data.nextCursor" class="catalog-pagination" aria-label="主题分页">
+      <nav v-if="query.cursor || data.nextCursor" class="catalog-pagination" :aria-label="t('catalog.pagination')">
         <button v-if="query.cursor" type="button" class="button button--outlined" @click="$router.back()">
-          <Icon name="material-symbols:arrow-back" size="19" /> 上一页
+          <Icon name="material-symbols:arrow-back" size="19" /> {{ t('common.previous') }}
         </button>
         <NuxtLink v-if="data.nextCursor" :to="{ path: '/themes', query: { ...query, cursor: data.nextCursor } }" class="button button--tonal">
-          下一页 <Icon name="material-symbols:arrow-forward" size="19" />
+          {{ t('common.next') }} <Icon name="material-symbols:arrow-forward" size="19" />
         </NuxtLink>
       </nav>
     </template>
