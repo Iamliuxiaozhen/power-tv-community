@@ -1,61 +1,63 @@
 <script setup lang="ts">
+const { t } = useI18n()
+
 useHead({
-  title: '主题制作指南',
-  meta: [{ name: 'description', content: '学习如何制作、打包、发布和导入 power-tv 主题包。' }],
+  title: computed(() => t('guide.metaTitle')),
+  meta: [{ name: 'description', content: computed(() => t('guide.metaDescription')) }],
 })
 </script>
 
 <template>
   <div class="guide-page">
     <header class="guide-hero">
-      <p class="eyebrow">THEME AUTHORING GUIDE</p>
-      <h1>从一组颜色，<br>到客厅里的新风格。</h1>
-      <p>power-tv 主题包只包含配置与图片，不包含可执行代码。你可以从官方模板开始，完成配色后把它发布到社区。</p>
+      <p class="eyebrow">{{ t('guide.eyebrow') }}</p>
+      <h1>{{ t('guide.heroTitleLine1') }}<br>{{ t('guide.heroTitleLine2') }}</h1>
+      <p>{{ t('guide.heroDescription') }}</p>
       <div class="guide-hero__actions">
         <a href="https://github.com/Iamliuxiaozhen/power-tv/blob/main/docs/theme-pack/template.theme.json" target="_blank" rel="noreferrer" class="button">
-          <Icon name="material-symbols:download" size="20" /> 获取官方模板
+          <Icon name="material-symbols:download" size="20" /> {{ t('guide.getTemplate') }}
         </a>
-        <NuxtLink to="/upload" class="button button--tonal"><Icon name="material-symbols:upload" size="20" /> 上传主题</NuxtLink>
+        <NuxtLink to="/upload" class="button button--tonal"><Icon name="material-symbols:upload" size="20" /> {{ t('guide.uploadTheme') }}</NuxtLink>
       </div>
     </header>
 
     <section class="guide-section" aria-labelledby="formats-heading">
       <div class="section-heading">
-        <div><h2 id="formats-heading">选择主题包格式</h2><p>三种格式使用同一份 theme.json，区别只在是否包含图片资源。</p></div>
+        <div><h2 id="formats-heading">{{ t('guide.formatsTitle') }}</h2><p>{{ t('guide.formatsDescription') }}</p></div>
       </div>
       <div class="guide-formats">
         <article class="card">
           <span><Icon name="material-symbols:deployed-code-outline" size="25" /></span>
           <h3>.ptheme</h3>
-          <p>推荐格式。本质是 ZIP 容器，可以携带预览图和背景图，便于在 power-tv 与社区之间分享。</p>
+          <p>{{ t('guide.pthemeDescription') }}</p>
         </article>
         <article class="card">
           <span><Icon name="material-symbols:folder-zip-outline" size="25" /></span>
           <h3>.zip</h3>
-          <p>与 .ptheme 内容完全相同，仅扩展名不同。适合使用常见压缩工具制作和检查。</p>
+          <p>{{ t('guide.zipDescription') }}</p>
         </article>
         <article class="card">
           <span><Icon name="material-symbols:data-object" size="25" /></span>
           <h3>.json</h3>
-          <p>直接上传 theme.json，适合纯配色主题。不能引用背景图片，也不会包含独立预览图。</p>
+          <p>{{ t('guide.jsonDescription') }}</p>
         </article>
       </div>
     </section>
 
     <section class="guide-section guide-steps" aria-labelledby="steps-heading">
       <div class="section-heading">
-        <div><h2 id="steps-heading">六步完成一个主题</h2><p>先完成最小可用版本，再逐步补充深色配色和素材。</p></div>
+        <div><h2 id="steps-heading">{{ t('guide.stepsTitle') }}</h2><p>{{ t('guide.stepsDescription') }}</p></div>
       </div>
 
       <article class="guide-step">
         <span class="guide-step__number">01</span>
         <div class="guide-step__content">
-          <h3>获取模板与 Schema</h3>
-          <p>复制官方模板开始编辑。模板包含必需字段；JSON Schema 可以为编辑器提供补全和校验，完整示例可用于了解可选字段的组织方式。</p>
+          <h3>{{ t('guide.step1Title') }}</h3>
+          <p>{{ t('guide.step1Description') }}</p>
           <div class="guide-links">
-            <a href="https://github.com/Iamliuxiaozhen/power-tv/blob/main/docs/theme-pack/template.theme.json" target="_blank" rel="noreferrer">主题模板 <Icon name="material-symbols:open-in-new" size="15" /></a>
-            <a href="https://github.com/Iamliuxiaozhen/power-tv/blob/main/docs/theme-pack/theme.schema.json" target="_blank" rel="noreferrer">JSON Schema <Icon name="material-symbols:open-in-new" size="15" /></a>
-            <a href="https://github.com/Iamliuxiaozhen/power-tv/blob/main/docs/theme-pack/examples/midnight-forest/theme.json" target="_blank" rel="noreferrer">完整示例 <Icon name="material-symbols:open-in-new" size="15" /></a>
+            <a href="https://github.com/Iamliuxiaozhen/power-tv/blob/main/docs/theme-pack/template.theme.json" target="_blank" rel="noreferrer">{{ t('guide.templateLink') }} <Icon name="material-symbols:open-in-new" size="15" /></a>
+            <a href="https://github.com/Iamliuxiaozhen/power-tv/blob/main/docs/theme-pack/theme.schema.json" target="_blank" rel="noreferrer">{{ t('guide.schemaLink') }} <Icon name="material-symbols:open-in-new" size="15" /></a>
+            <a href="https://github.com/Iamliuxiaozhen/power-tv/blob/main/docs/theme-pack/examples/midnight-forest/theme.json" target="_blank" rel="noreferrer">{{ t('guide.exampleLink') }} <Icon name="material-symbols:open-in-new" size="15" /></a>
           </div>
         </div>
       </article>
@@ -63,15 +65,15 @@ useHead({
       <article class="guide-step">
         <span class="guide-step__number">02</span>
         <div class="guide-step__content">
-          <h3>填写元数据与版本</h3>
-          <p>以下字段决定主题在社区和 power-tv 中的身份。名称与描述可使用字符串，或包含 en、zh-CN 等键的本地化对象。</p>
+          <h3>{{ t('guide.step2Title') }}</h3>
+          <p>{{ t('guide.step2Description') }}</p>
           <dl class="guide-fields">
-            <div><dt>schemaVersion</dt><dd>当前固定为 1。</dd></div>
-            <div><dt>id</dt><dd>3–64 位字母、数字、点、下划线或连字符；不能包含连续点号，也不能使用 builtin. 前缀。</dd></div>
-            <div><dt>name</dt><dd>必填，每个语言版本最多 64 个字符。</dd></div>
-            <div><dt>description</dt><dd>可选，每个语言版本最多 512 个字符。</dd></div>
-            <div><dt>version</dt><dd>建议使用主.次.修订，例如 1.0.0；同一 ID 的每个版本只能发布一次。</dd></div>
-            <div><dt>minAppVersion</dt><dd>可选，声明主题所需的最低 power-tv 版本。</dd></div>
+            <div><dt>schemaVersion</dt><dd>{{ t('guide.schemaVersionDescription') }}</dd></div>
+            <div><dt>id</dt><dd>{{ t('guide.idDescription') }}</dd></div>
+            <div><dt>name</dt><dd>{{ t('guide.nameDescription') }}</dd></div>
+            <div><dt>description</dt><dd>{{ t('guide.descriptionFieldDescription') }}</dd></div>
+            <div><dt>version</dt><dd>{{ t('guide.versionDescription') }}</dd></div>
+            <div><dt>minAppVersion</dt><dd>{{ t('guide.minAppVersionDescription') }}</dd></div>
           </dl>
         </div>
       </article>
@@ -79,16 +81,16 @@ useHead({
       <article class="guide-step">
         <span class="guide-step__number">03</span>
         <div class="guide-step__content">
-          <h3>设计浅色与深色配色</h3>
-          <p>schemes.light 是必需项，schemes.dark 可省略。primary 和 surface 足以建立基础风格；其余 Material 3 角色可按需补充，未指定的角色由 power-tv 派生。</p>
+          <h3>{{ t('guide.step3Title') }}</h3>
+          <p>{{ t('guide.step3Description') }}</p>
           <div class="guide-tip">
             <Icon name="material-symbols:contrast" size="22" />
-            <p>建议明确设置 onPrimary、onSurface 等前景角色，并检查文字与背景的对比度。颜色支持 #RGB、#RRGGBB 和 #AARRGGBB。</p>
+            <p>{{ t('guide.contrastTip') }}</p>
           </div>
-          <p>还可配置 dataViz 图表强调色、系统字体、卡片圆角和仪表盘布局。使用 Material Theme Builder 时，只需将导出结果中的颜色角色整理到 schemes 中。</p>
+          <p>{{ t('guide.extraFieldsDescription') }}</p>
           <div class="guide-links">
-            <a href="https://material-foundation.github.io/material-theme-builder/" target="_blank" rel="noreferrer">Material Theme Builder <Icon name="material-symbols:open-in-new" size="15" /></a>
-            <a href="https://github.com/Iamliuxiaozhen/power-tv/blob/main/docs/theme-packs.md#字段说明" target="_blank" rel="noreferrer">查看全部字段 <Icon name="material-symbols:open-in-new" size="15" /></a>
+            <a href="https://material-foundation.github.io/material-theme-builder/" target="_blank" rel="noreferrer">{{ t('guide.materialBuilderLink') }} <Icon name="material-symbols:open-in-new" size="15" /></a>
+            <a href="https://github.com/Iamliuxiaozhen/power-tv/blob/main/docs/theme-packs.md#字段说明" target="_blank" rel="noreferrer">{{ t('guide.allFieldsLink') }} <Icon name="material-symbols:open-in-new" size="15" /></a>
           </div>
         </div>
       </article>
@@ -96,17 +98,17 @@ useHead({
       <article class="guide-step">
         <span class="guide-step__number">04</span>
         <div class="guide-step__content">
-          <h3>添加可选图片</h3>
-          <p>将 theme.json 放在压缩包根目录。preview.webp 用于社区预览；背景图必须位于 assets 目录，并在 backdrop.image 中填写对应路径。</p>
+          <h3>{{ t('guide.step4Title') }}</h3>
+          <p>{{ t('guide.step4Description') }}</p>
           <pre class="guide-tree"><code>my-theme.ptheme
 ├── theme.json
 ├── preview.webp
 └── assets/
     └── backdrop.webp</code></pre>
           <ul class="guide-checklist">
-            <li><Icon name="material-symbols:check" size="18" /> 图片使用 PNG、JPEG 或 WebP，扩展名必须与真实格式一致。</li>
-            <li><Icon name="material-symbols:check" size="18" /> 背景路径示例：assets/backdrop.webp；dim 取值为 0–0.8。</li>
-            <li><Icon name="material-symbols:check" size="18" /> 确保拥有图片、字体等素材的使用和再发布授权。</li>
+            <li><Icon name="material-symbols:check" size="18" /> {{ t('guide.checklistImages') }}</li>
+            <li><Icon name="material-symbols:check" size="18" /> {{ t('guide.checklistBackdrop') }}</li>
+            <li><Icon name="material-symbols:check" size="18" /> {{ t('guide.checklistLicense') }}</li>
           </ul>
         </div>
       </article>
@@ -114,23 +116,23 @@ useHead({
       <article class="guide-step">
         <span class="guide-step__number">05</span>
         <div class="guide-step__content">
-          <h3>打包并检查</h3>
-          <p>在包含 theme.json 的工作目录中打包。下面命令包含可选预览图和 assets 目录；没有这些素材时，从命令中移除对应项，或直接使用 .json。</p>
+          <h3>{{ t('guide.step5Title') }}</h3>
+          <p>{{ t('guide.step5Description') }}</p>
           <pre class="guide-command"><code>cd my-theme
 zip -r ../my-theme.ptheme theme.json preview.webp assets</code></pre>
-          <p>不要先打包外层目录，否则 theme.json 会位于子目录而无法读取。上传前可解压检查结构，并在 power-tv 中预览实际效果。</p>
+          <p>{{ t('guide.packagingNote') }}</p>
         </div>
       </article>
 
       <article class="guide-step">
         <span class="guide-step__number">06</span>
         <div class="guide-step__content">
-          <h3>发布到社区并导入 power-tv</h3>
-          <p>使用 GitHub 登录社区后上传主题包。服务端校验通过后会公开展示；后续更新必须保持相同主题 ID，并使用未发布过的新版本号。已发布版本不可覆盖，历史版本仍可下载。</p>
-          <p>在 power-tv 中打开“设置 → 主题包 → 导入”，选择下载的 .ptheme、.zip 或 .json 文件，预览确认后应用。</p>
+          <h3>{{ t('guide.step6Title') }}</h3>
+          <p>{{ t('guide.step6Description') }}</p>
+          <p>{{ t('guide.importHelp') }}</p>
           <div class="guide-links">
-            <NuxtLink to="/upload">发布主题 <Icon name="material-symbols:arrow-forward" size="15" /></NuxtLink>
-            <a href="https://power-tv.liuxiaozhen.dev" target="_blank" rel="noreferrer">访问 power-tv 官网 <Icon name="material-symbols:open-in-new" size="15" /></a>
+            <NuxtLink to="/upload">{{ t('guide.publishTheme') }} <Icon name="material-symbols:arrow-forward" size="15" /></NuxtLink>
+            <a href="https://power-tv.liuxiaozhen.dev" target="_blank" rel="noreferrer">{{ t('guide.visitWebsite') }} <Icon name="material-symbols:open-in-new" size="15" /></a>
           </div>
         </div>
       </article>
@@ -138,26 +140,26 @@ zip -r ../my-theme.ptheme theme.json preview.webp assets</code></pre>
 
     <section class="guide-section" aria-labelledby="limits-heading">
       <div class="section-heading">
-        <div><h2 id="limits-heading">上传安全限制</h2><p>社区与 power-tv 都会检查不可信主题包，超限或结构不安全的文件会被拒绝。</p></div>
+        <div><h2 id="limits-heading">{{ t('guide.limitsTitle') }}</h2><p>{{ t('guide.limitsDescription') }}</p></div>
       </div>
       <div class="guide-limits">
-        <article><strong>10 MiB</strong><span>上传包最大值</span></article>
-        <article><strong>8 MiB</strong><span>ZIP 实际解压总量</span></article>
-        <article><strong>64</strong><span>ZIP 条目上限</span></article>
-        <article><strong>256 KiB</strong><span>theme.json 上限</span></article>
-        <article><strong>4 MiB</strong><span>单张图片上限</span></article>
-        <article><strong>400 万像素</strong><span>单张图片像素上限</span></article>
+        <article><strong>10 MiB</strong><span>{{ t('guide.limitUploadMax') }}</span></article>
+        <article><strong>8 MiB</strong><span>{{ t('guide.limitZipUncompressed') }}</span></article>
+        <article><strong>64</strong><span>{{ t('guide.limitZipEntries') }}</span></article>
+        <article><strong>256 KiB</strong><span>{{ t('guide.limitManifest') }}</span></article>
+        <article><strong>4 MiB</strong><span>{{ t('guide.limitImage') }}</span></article>
+        <article><strong>{{ t('guide.limitImagePixelsValue') }}</strong><span>{{ t('guide.limitImagePixels') }}</span></article>
       </div>
       <div class="guide-security-note">
         <Icon name="material-symbols:security" size="24" />
-        <p>主题包不能包含脚本、可执行文件、绝对路径或 .. 路径段。ZIP 不支持加密、多磁盘和 ZIP64；重复条目、损坏图片及伪造扩展名也会被拒绝。</p>
+        <p>{{ t('guide.securityNote') }}</p>
       </div>
     </section>
 
     <section class="guide-more card">
       <span><Icon name="material-symbols:menu-book-outline" size="28" /></span>
-      <div><h2>需要完整的字段参考？</h2><p>上游官方文档维护最新的字段、布局预设、导入行为与已知边界。</p></div>
-      <a href="https://github.com/Iamliuxiaozhen/power-tv/blob/main/docs/theme-packs.md" target="_blank" rel="noreferrer" class="button button--tonal">阅读官方文档 <Icon name="material-symbols:open-in-new" size="18" /></a>
+      <div><h2>{{ t('guide.moreTitle') }}</h2><p>{{ t('guide.moreDescription') }}</p></div>
+      <a href="https://github.com/Iamliuxiaozhen/power-tv/blob/main/docs/theme-packs.md" target="_blank" rel="noreferrer" class="button button--tonal">{{ t('guide.readDocs') }} <Icon name="material-symbols:open-in-new" size="18" /></a>
     </section>
   </div>
 </template>

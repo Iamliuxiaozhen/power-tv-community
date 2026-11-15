@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ThemeDetailResponse, ThemeSummary } from '#shared/community'
 
+const { t } = useI18n()
 const route = useRoute()
 const { loggedIn, loginUrl, ready, user } = useAuth()
 const themeId = computed(() => typeof route.params.themeId === 'string' ? route.params.themeId : undefined)
@@ -16,14 +17,14 @@ const { data: theme, pending, error } = await useAsyncData<ThemeSummary | null>(
 const isOwner = computed(() => Boolean(theme.value && user.value?.githubId === theme.value.owner.githubId))
 
 useHead({
-  title: computed(() => theme.value ? `更新 ${theme.value.name}` : '发布主题'),
-  meta: [{ name: 'description', content: '上传并发布 power-tv 社区主题包。' }],
+  title: computed(() => theme.value ? t('upload.metaUpdateTitle', { name: theme.value.name }) : t('upload.metaTitle')),
+  meta: [{ name: 'description', content: computed(() => t('upload.metaDescription')) }],
 })
 </script>
 
 <template>
   <div class="upload-page">
-    <div v-if="!ready || (themeId && pending)" class="upload-loading" aria-label="正在加载上传页面">
+    <div v-if="!ready || (themeId && pending)" class="upload-loading" :aria-label="t('upload.loading')">
       <div class="upload-loading__title skeleton" />
       <div class="upload-loading__form skeleton" />
       <div class="upload-loading__aside skeleton" />
@@ -32,43 +33,43 @@ useHead({
     <AppEmptyState
       v-else-if="!loggedIn"
       icon="material-symbols:account-circle-outline"
-      title="登录后发布主题"
-      description="使用 GitHub 账号登录即可上传主题。社区不会要求你创建另一套账号。"
+      :title="t('upload.loginTitle')"
+      :description="t('upload.loginDescription')"
     >
-      <a :href="loginUrl()" class="button"><Icon name="material-symbols:login" size="20" /> 使用 GitHub 继续</a>
-      <NuxtLink to="/themes" class="button button--outlined">先逛逛主题</NuxtLink>
+      <a :href="loginUrl()" class="button"><Icon name="material-symbols:login" size="20" /> {{ t('upload.continueWithGithub') }}</a>
+      <NuxtLink to="/themes" class="button button--outlined">{{ t('upload.browseFirst') }}</NuxtLink>
     </AppEmptyState>
 
     <AppEmptyState
       v-else-if="themeId && error"
       icon="material-symbols:search-off"
-      title="无法更新此主题"
-      description="主题可能不存在、已删除或已隐藏。请返回主题目录重新选择。"
+      :title="t('upload.notFoundTitle')"
+      :description="t('upload.notFoundDescription')"
     >
-      <NuxtLink to="/themes" class="button button--tonal">返回主题目录</NuxtLink>
+      <NuxtLink to="/themes" class="button button--tonal">{{ t('upload.backToCatalog') }}</NuxtLink>
     </AppEmptyState>
 
     <AppEmptyState
       v-else-if="themeId && theme && !isOwner"
       icon="material-symbols:lock-outline"
-      title="只有原作者可以更新"
-      description="主题 ID 与原作者绑定。你可以发布自己的新主题，但不能替换其他创作者的作品。"
+      :title="t('upload.notOwnerTitle')"
+      :description="t('upload.notOwnerDescription')"
     >
-      <NuxtLink :to="`/themes/${encodeURIComponent(theme.id)}`" class="button button--outlined">返回主题详情</NuxtLink>
-      <NuxtLink to="/upload" class="button">发布新主题</NuxtLink>
+      <NuxtLink :to="`/themes/${encodeURIComponent(theme.id)}`" class="button button--outlined">{{ t('upload.backToDetail') }}</NuxtLink>
+      <NuxtLink to="/upload" class="button">{{ t('upload.publishNew') }}</NuxtLink>
     </AppEmptyState>
 
     <template v-else>
-      <nav class="upload-breadcrumb" aria-label="面包屑">
+      <nav class="upload-breadcrumb" :aria-label="t('upload.breadcrumb')">
         <NuxtLink :to="theme ? `/themes/${encodeURIComponent(theme.id)}` : '/themes'">
-          <Icon name="material-symbols:arrow-back" size="18" /> {{ theme ? '返回主题详情' : '主题目录' }}
+          <Icon name="material-symbols:arrow-back" size="18" /> {{ theme ? t('upload.backToDetail') : t('upload.catalog') }}
         </NuxtLink>
       </nav>
 
       <header class="upload-header">
-        <p class="eyebrow">{{ theme ? 'RELEASE A NEW VERSION' : 'CREATOR PORTAL' }}</p>
-        <h1>{{ theme ? `为 ${theme.name} 发布新版本` : '把你的风格，带进更多客厅' }}</h1>
-        <p>{{ theme ? '上传包含相同主题 ID 的新主题包，历史版本仍会保留。' : '上传符合 power-tv 规范的主题包，校验通过后即刻出现在社区目录。' }}</p>
+        <p class="eyebrow">{{ theme ? t('upload.eyebrowUpdate') : t('upload.eyebrowNew') }}</p>
+        <h1>{{ theme ? t('upload.titleUpdate', { name: theme.name }) : t('upload.titleNew') }}</h1>
+        <p>{{ theme ? t('upload.descriptionUpdate') : t('upload.descriptionNew') }}</p>
       </header>
 
       <div class="upload-layout">
@@ -79,30 +80,30 @@ useHead({
           :current-version="theme?.version"
         />
 
-        <aside class="upload-guide" aria-label="主题发布指南">
+        <aside class="upload-guide" :aria-label="t('upload.guideAria')">
           <section class="card upload-guide__section">
             <span class="upload-guide__number">01</span>
-            <h2>准备 theme.json</h2>
-            <p>配置唯一的主题 ID、名称、版本和浅色方案。发布者的 GitHub 身份由社区记录，无需填写账号密码。</p>
+            <h2>{{ t('upload.step1Title') }}</h2>
+            <p>{{ t('upload.step1Description') }}</p>
           </section>
           <section class="card upload-guide__section">
             <span class="upload-guide__number">02</span>
-            <h2>打包可选资源</h2>
-            <p>在 ZIP 根目录放置 theme.json，可添加 preview.png 预览图和 assets 目录中的背景图。</p>
+            <h2>{{ t('upload.step2Title') }}</h2>
+            <p>{{ t('upload.step2Description') }}</p>
             <ul>
-              <li>PNG、JPEG 或 WebP 图片</li>
-              <li>单张图片最大 4 MiB</li>
-              <li>不能包含脚本或可执行文件</li>
+              <li>{{ t('upload.step2Bullet1') }}</li>
+              <li>{{ t('upload.step2Bullet2') }}</li>
+              <li>{{ t('upload.step2Bullet3') }}</li>
             </ul>
           </section>
           <section class="card upload-guide__section">
             <span class="upload-guide__number">03</span>
-            <h2>发布不可变版本</h2>
-            <p>同一主题 ID 只能由原作者更新。每个版本号只能发布一次，已发布文件不能被覆盖。</p>
+            <h2>{{ t('upload.step3Title') }}</h2>
+            <p>{{ t('upload.step3Description') }}</p>
           </section>
           <a href="https://github.com/Iamliuxiaozhen/power-tv/tree/main/docs/theme-pack" target="_blank" rel="noreferrer" class="upload-docs">
             <Icon name="material-symbols:menu-book-outline" size="22" />
-            <span><strong>主题包开发文档</strong><small>查看完整 Schema 与示例</small></span>
+            <span><strong>{{ t('upload.docsTitle') }}</strong><small>{{ t('upload.docsDescription') }}</small></span>
             <Icon name="material-symbols:open-in-new" size="18" />
           </a>
         </aside>
