@@ -71,6 +71,19 @@ export interface UserThemesResponse extends ThemeListResponse {
   user: PublicUser
 }
 
+export interface CommunityComment {
+  id: string
+  body: string | null
+  status: 'visible' | 'hidden' | 'deleted'
+  createdAt: string
+  author: CommunityUser
+}
+
+export interface CommentListResponse {
+  items: CommunityComment[]
+  nextCursor: string | null
+}
+
 export interface DashboardStats {
   themes: number
   favorites: number

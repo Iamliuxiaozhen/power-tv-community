@@ -128,13 +128,15 @@ function decodeCommentCursor(value: string): { id: string, createdAt: string } {
   }
 }
 
-export async function addComment(db: D1Database, themeId: string, authorId: number, body: string): Promise<string | null> {
+export async function addComment(db: D1Database, themeId: string, authorId: number, body: string): Promise<{ id: string, createdAt: string } | null> {
   const id = crypto.randomUUID()
   const result = await db.prepare(`
     INSERT INTO comments (id, theme_id, author_id, body, created_at)
     SELECT ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM themes WHERE id = ? AND status = 'published')
-  `).bind(id, themeId, authorId, body, new Date().toISOString(), themeId).run()
-  return (result.meta.changes ?? 0) > 0 ? id : null
+    RETURNING id, created_at
+  `).bind(id, themeId, authorId, body, new Date().toISOString(), themeId)
+    .first<{ id: string, created_at: string }>()
+  return result ? { id: result.id, createdAt: result.created_at } : null
 }
 
 export async function deleteOwnComment(db: D1Database, id: string, authorId: number): Promise<boolean> {

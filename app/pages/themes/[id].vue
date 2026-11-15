@@ -260,6 +260,8 @@ function assetUrl(kind: 'preview' | 'backdrop'): string {
         :selected-version="selectedVersion.version"
       />
 
+      <ThemeComments :key="data.theme.id" :theme-id="data.theme.id" />
+
       <AppDialog
         v-model:open="deleteOpen"
         title="删除这个主题？"
