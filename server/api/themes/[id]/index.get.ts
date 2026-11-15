@@ -6,7 +6,7 @@ export default defineEventHandler(async (event): Promise<ThemeDetailResponse> =>
   const db = getDatabase(event)
   const theme = await getThemeRecord(db, themeId)
   if (!theme) throw createError({ statusCode: 404, statusMessage: 'Theme not found' })
-  const session = await getUserSession(event)
+  const session = await readUserSession(event)
 
   return {
     theme: toThemeSummary(theme),

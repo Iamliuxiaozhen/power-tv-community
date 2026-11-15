@@ -1,13 +1,14 @@
 export function useAuth() {
   const route = useRoute()
-  const { clear, fetch, loggedIn, ready, user } = useUserSession()
+  const { fetch, loggedIn, ready, user } = useUserSession()
 
   function loginUrl(returnTo = route.fullPath): string {
     return `/auth/github?returnTo=${encodeURIComponent(returnTo)}`
   }
 
   async function logout(): Promise<void> {
-    await clear()
+    await $fetch('/api/auth/logout', { method: 'POST' })
+    await fetch()
     await navigateTo('/')
   }
 

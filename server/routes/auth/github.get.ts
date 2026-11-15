@@ -27,7 +27,7 @@ export default defineOAuthGitHubEventHandler({
       githubUrl: user.html_url,
     }
     await upsertGitHubUser(getDatabase(event as unknown as H3Event), profile)
-    await replaceUserSession(event, {
+    await writeUserSession(event as unknown as H3Event, {
       user: profile,
       loggedInAt: new Date().toISOString(),
     })

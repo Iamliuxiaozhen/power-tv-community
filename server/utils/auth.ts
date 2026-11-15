@@ -12,7 +12,10 @@ const RATE_LIMITS = {
 export type RateLimitAction = keyof typeof RATE_LIMITS
 
 export async function requireAuthenticatedUser(event: H3Event) {
-  const session = await requireUserSession(event)
+  const session = await readUserSession(event)
+  if (!session.user) {
+    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
+  }
   return session.user
 }
 
