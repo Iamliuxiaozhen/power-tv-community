@@ -8,6 +8,8 @@ import type {
   ReportStatus,
 } from '#shared/community'
 
+const { t } = useI18n()
+const { formatDate } = useFormatters()
 const route = useRoute()
 const { loggedIn, loginUrl, ready } = useAuth()
 const { showSnackbar } = useSnackbar()
@@ -27,28 +29,28 @@ const { data, pending, error, refresh } = await useAsyncData<AdminReportListResp
   { watch: [status, cursor, loggedIn] },
 )
 
-const tabs: { value: ReportStatus, label: string, icon: string }[] = [
-  { value: 'pending', label: '待处理', icon: 'material-symbols:pending-actions' },
-  { value: 'resolved', label: '已处理', icon: 'material-symbols:check-circle-outline' },
-  { value: 'dismissed', label: '已驳回', icon: 'material-symbols:do-not-disturb-on-outline' },
-]
-const reasonLabels: Record<ReportReason, string> = {
-  spam: '垃圾信息',
-  malware: '恶意内容',
-  copyright: '侵犯版权',
-  other: '其他问题',
-}
-const statusLabels: Record<ReportStatus, string> = {
-  pending: '待处理',
-  resolved: '已处理',
-  dismissed: '已驳回',
-}
-const actionMessages: Record<ReportAction, string> = {
-  resolve: '举报已标记为处理完成。',
-  dismiss: '举报已驳回。',
-  hide: '内容已隐藏，相关待处理举报已解决。',
-  restore: '内容已恢复公开展示。',
-}
+const tabs = computed<{ value: ReportStatus, label: string, icon: string }[]>(() => [
+  { value: 'pending', label: t('admin.statusPending'), icon: 'material-symbols:pending-actions' },
+  { value: 'resolved', label: t('admin.statusResolved'), icon: 'material-symbols:check-circle-outline' },
+  { value: 'dismissed', label: t('admin.statusDismissed'), icon: 'material-symbols:do-not-disturb-on-outline' },
+])
+const reasonLabels = computed<Record<ReportReason, string>>(() => ({
+  spam: t('report.reasons.spam'),
+  malware: t('report.reasons.malware'),
+  copyright: t('report.reasons.copyright'),
+  other: t('report.reasons.other'),
+}))
+const statusLabels = computed<Record<ReportStatus, string>>(() => ({
+  pending: t('admin.statusPending'),
+  resolved: t('admin.statusResolved'),
+  dismissed: t('admin.statusDismissed'),
+}))
+const actionMessages = computed<Record<ReportAction, string>>(() => ({
+  resolve: t('admin.actionResolved'),
+  dismiss: t('admin.actionDismissed'),
+  hide: t('admin.actionHidden'),
+  restore: t('admin.actionRestored'),
+}))
 
 const activeAction = ref<{ id: string, action: ReportAction } | null>(null)
 const queueActionError = ref('')
@@ -58,18 +60,20 @@ const confirmationOpen = ref(false)
 const dialogError = ref('')
 const confirmationTitle = computed(() => {
   if (!actionTarget.value || !confirmationAction.value) return ''
-  const target = actionTarget.value.targetType === 'theme' ? '主题' : '评论'
-  return confirmationAction.value === 'hide' ? `隐藏这个${target}？` : `恢复这个${target}？`
+  const target = actionTarget.value.targetType === 'theme' ? t('report.theme') : t('report.comment')
+  return confirmationAction.value === 'hide'
+    ? t('admin.hideDialogTitle', { target })
+    : t('admin.restoreDialogTitle', { target })
 })
 const confirmationDescription = computed(() => {
   if (!actionTarget.value || !confirmationAction.value) return ''
-  if (confirmationAction.value === 'restore') return '恢复后，内容会重新出现在公开社区中。'
+  if (confirmationAction.value === 'restore') return t('admin.restoreDialogDescription')
   return actionTarget.value.targetType === 'theme'
-    ? '隐藏后，主题详情和所有版本下载将不可公开访问，相关待处理举报会标记为已处理。'
-    : '隐藏后，公开讨论只显示隐藏占位，相关待处理举报会标记为已处理。'
+    ? t('admin.hideThemeDescription')
+    : t('admin.hideCommentDescription')
 })
 
-useHead({ title: '举报管理' })
+useHead({ title: computed(() => t('admin.metaTitle')) })
 
 function targetStatus(report: AdminReport): string {
   return report.comment?.status ?? report.theme.status
@@ -78,10 +82,10 @@ function targetStatus(report: AdminReport): string {
 function targetStatusLabel(report: AdminReport): string {
   const value = targetStatus(report)
   const labels: Record<string, string> = {
-    published: '公开',
-    visible: '可见',
-    hidden: '已隐藏',
-    deleted: '已删除',
+    published: t('admin.targetPublished'),
+    visible: t('admin.targetVisible'),
+    hidden: t('admin.targetHidden'),
+    deleted: t('admin.targetDeleted'),
   }
   return labels[value] ?? value
 }
@@ -132,20 +136,20 @@ async function executeAction(report: AdminReport, action: ReportAction): Promise
     confirmationOpen.value = false
     actionTarget.value = null
     confirmationAction.value = null
-    showSnackbar(actionMessages[action])
+    showSnackbar(actionMessages.value[action])
     await refresh()
   }
   catch (error) {
     const statusCode = (error as { status?: number }).status
     const message = statusCode === 401
-      ? '登录已过期，请重新登录。'
+      ? t('admin.errorSession')
       : statusCode === 403
-        ? '当前账号没有管理员权限。'
+        ? t('admin.errorForbidden')
         : statusCode === 404
-          ? '举报或目标内容不存在，请刷新队列。'
+          ? t('admin.errorNotFound')
           : statusCode === 409
-            ? '内容或举报状态已变化，请刷新队列后重试。'
-            : '操作失败，请检查网络连接后重试。'
+            ? t('admin.errorConflict')
+            : t('admin.errorGeneric')
     if (action === 'hide' || action === 'restore') dialogError.value = message
     else queueActionError.value = message
   }
@@ -164,7 +168,7 @@ function queryWithCursor(value?: string): Record<string, string> {
 
 <template>
   <div class="admin-reports-page">
-    <div v-if="!ready || (loggedIn && pending && !data)" class="admin-loading" aria-label="正在加载举报队列">
+    <div v-if="!ready || (loggedIn && pending && !data)" class="admin-loading" :aria-label="t('admin.loading')">
       <div class="admin-loading__heading skeleton" />
       <div class="admin-loading__tabs skeleton" />
       <div v-for="index in 3" :key="index" class="admin-loading__card skeleton" />
@@ -173,41 +177,41 @@ function queryWithCursor(value?: string): Record<string, string> {
     <AppEmptyState
       v-else-if="!loggedIn"
       icon="material-symbols:admin-panel-settings-outline"
-      title="登录后进入举报管理"
-      description="只有配置了管理员权限的 GitHub 账号可以处理社区举报。"
+      :title="t('admin.loginTitle')"
+      :description="t('admin.loginDescription')"
     >
-      <a :href="loginUrl()" class="button"><Icon name="material-symbols:login" size="20" /> 使用 GitHub 继续</a>
+      <a :href="loginUrl()" class="button"><Icon name="material-symbols:login" size="20" /> {{ t('admin.continueWithGithub') }}</a>
     </AppEmptyState>
 
     <AppEmptyState
       v-else-if="error && !data && error.statusCode === 403"
       icon="material-symbols:gpp-bad-outline"
-      title="没有管理员权限"
-      description="当前 GitHub 账号不在管理员列表中。你仍可浏览主题和参与社区讨论。"
+      :title="t('admin.noPermissionTitle')"
+      :description="t('admin.noPermissionDescription')"
     >
-      <NuxtLink to="/themes" class="button button--tonal">返回主题目录</NuxtLink>
+      <NuxtLink to="/themes" class="button button--tonal">{{ t('admin.backToCatalog') }}</NuxtLink>
     </AppEmptyState>
 
     <AppEmptyState
       v-else-if="error && !data"
       icon="material-symbols:cloud-off"
-      title="举报队列加载失败"
-      description="暂时无法读取举报内容，请稍后重试。"
+      :title="t('admin.loadErrorTitle')"
+      :description="t('admin.loadErrorDescription')"
     >
-      <button type="button" class="button button--tonal" @click="refresh()">重试</button>
+      <button type="button" class="button button--tonal" @click="refresh()">{{ t('common.retry') }}</button>
     </AppEmptyState>
 
     <template v-else-if="data">
       <header class="admin-header">
         <div>
-          <p class="eyebrow">COMMUNITY MODERATION</p>
-          <h1>举报管理</h1>
-          <p>核实社区反馈，处理违规内容，并保留清晰的处理记录。</p>
+          <p class="eyebrow">{{ t('admin.eyebrow') }}</p>
+          <h1>{{ t('admin.title') }}</h1>
+          <p>{{ t('admin.description') }}</p>
         </div>
-        <span class="admin-header__badge"><Icon name="material-symbols:shield-person-outline" size="23" /> 管理员</span>
+        <span class="admin-header__badge"><Icon name="material-symbols:shield-person-outline" size="23" /> {{ t('admin.badge') }}</span>
       </header>
 
-      <nav class="report-tabs" aria-label="举报状态">
+      <nav class="report-tabs" :aria-label="t('admin.tabsAria')">
         <NuxtLink
           v-for="tab in tabs"
           :key="tab.value"
@@ -220,20 +224,20 @@ function queryWithCursor(value?: string): Record<string, string> {
       </nav>
 
       <p v-if="queueActionError" class="queue-error" role="alert">
-      {{ queueActionError }} <button type="button" @click="refresh()">刷新队列</button>
+      {{ queueActionError }} <button type="button" @click="refresh()">{{ t('admin.refreshQueue') }}</button>
       </p>
       <p v-else-if="error" class="queue-error" role="alert">
-        队列刷新失败，当前显示上次加载的内容。<button type="button" @click="refresh()">重试</button>
+        {{ t('admin.refreshFailed') }}<button type="button" @click="refresh()">{{ t('common.retry') }}</button>
       </p>
 
-      <div v-if="pending" class="report-list" aria-label="正在刷新举报队列">
+      <div v-if="pending" class="report-list" :aria-label="t('admin.refreshing')">
         <div v-for="index in 3" :key="index" class="admin-loading__card skeleton" />
       </div>
       <AppEmptyState
         v-else-if="!data.items.length"
         :icon="status === 'pending' ? 'material-symbols:task-alt' : 'material-symbols:inbox-outline'"
-        :title="status === 'pending' ? '没有待处理举报' : `没有${statusLabels[status]}举报`"
-        :description="status === 'pending' ? '社区目前没有需要你处理的举报。' : '切换其他标签可查看不同状态的记录。'"
+        :title="status === 'pending' ? t('admin.emptyPendingTitle') : t('admin.emptyOtherTitle', { status: statusLabels[status] })"
+        :description="status === 'pending' ? t('admin.emptyPendingDescription') : t('admin.emptyOtherDescription')"
       />
 
       <div v-else class="report-list">
@@ -242,7 +246,7 @@ function queryWithCursor(value?: string): Record<string, string> {
             <div class="report-card__title">
               <span><Icon :name="report.targetType === 'theme' ? 'material-symbols:palette-outline' : 'material-symbols:forum-outline'" size="22" /></span>
               <div>
-                <h2>{{ report.targetType === 'theme' ? '主题举报' : '评论举报' }}</h2>
+                <h2>{{ report.targetType === 'theme' ? t('admin.themeReport') : t('admin.commentReport') }}</h2>
                 <time :datetime="report.createdAt">{{ formatDate(report.createdAt) }}</time>
               </div>
             </div>
@@ -256,43 +260,43 @@ function queryWithCursor(value?: string): Record<string, string> {
 
           <div class="report-context">
             <div class="report-theme">
-              <span class="report-context__label">{{ report.targetType === 'theme' ? '被举报主题' : '所属主题' }}</span>
+              <span class="report-context__label">{{ report.targetType === 'theme' ? t('admin.reportedTheme') : t('admin.parentTheme') }}</span>
               <NuxtLink v-if="report.theme.status === 'published'" :to="`/themes/${encodeURIComponent(report.theme.id)}`">
                 <strong>{{ report.theme.name }}</strong>
                 <Icon name="material-symbols:arrow-outward" size="17" />
               </NuxtLink>
               <strong v-else>{{ report.theme.name }}</strong>
               <code>{{ report.theme.id }}</code>
-              <small>创作者：{{ report.theme.owner.displayName || report.theme.owner.login }} (@{{ report.theme.owner.login }})</small>
+              <small>{{ t('admin.creator', { name: report.theme.owner.displayName || report.theme.owner.login, login: report.theme.owner.login }) }}</small>
             </div>
             <div v-if="report.comment" class="report-comment">
               <div>
-                <span class="report-context__label">被举报评论</span>
+                <span class="report-context__label">{{ t('admin.reportedComment') }}</span>
                 <small>{{ report.comment.author.displayName || report.comment.author.login }} (@{{ report.comment.author.login }}) · {{ formatDate(report.comment.createdAt) }}</small>
               </div>
               <p>{{ report.comment.body }}</p>
-              <span class="moderator-only"><Icon name="material-symbols:lock-outline" size="14" /> 原始正文仅管理员可见</span>
+              <span class="moderator-only"><Icon name="material-symbols:lock-outline" size="14" /> {{ t('admin.moderatorOnly') }}</span>
             </div>
           </div>
 
           <dl class="report-facts">
-            <div><dt>举报原因</dt><dd>{{ reasonLabels[report.reason] }}</dd></div>
+            <div><dt>{{ t('admin.reason') }}</dt><dd>{{ reasonLabels[report.reason] }}</dd></div>
             <div>
-              <dt>举报人</dt>
+              <dt>{{ t('admin.reporter') }}</dt>
               <dd><NuxtLink :to="`/users/${encodeURIComponent(report.reporter.login)}`">{{ report.reporter.displayName || report.reporter.login }} (@{{ report.reporter.login }})</NuxtLink></dd>
             </div>
-            <div><dt>举报编号</dt><dd><code>{{ report.id }}</code></dd></div>
+            <div><dt>{{ t('admin.reportId') }}</dt><dd><code>{{ report.id }}</code></dd></div>
           </dl>
 
           <div v-if="report.details" class="report-details-block">
-            <strong>补充说明</strong>
+            <strong>{{ t('admin.details') }}</strong>
             <p>{{ report.details }}</p>
           </div>
 
           <div v-if="report.handledBy || report.handledAt" class="report-audit">
             <Icon name="material-symbols:manage-history" size="19" />
             <span>
-              <template v-if="report.handledBy">由 {{ report.handledBy.displayName || report.handledBy.login }} 处理</template>
+              <template v-if="report.handledBy">{{ t('admin.handledBy', { name: report.handledBy.displayName || report.handledBy.login }) }}</template>
               <template v-if="report.handledAt"> · {{ formatDate(report.handledAt) }}</template>
             </span>
           </div>
@@ -301,28 +305,28 @@ function queryWithCursor(value?: string): Record<string, string> {
             <template v-if="report.status === 'pending'">
               <button type="button" class="button button--tonal button--small" :disabled="isActive(report)" @click="requestAction(report, 'resolve')">
                 <Icon name="material-symbols:check" size="18" />
-                {{ activeAction?.action === 'resolve' && isActive(report) ? '正在处理…' : '标记已处理' }}
+                {{ activeAction?.action === 'resolve' && isActive(report) ? t('admin.handling') : t('admin.markResolved') }}
               </button>
               <button type="button" class="button button--outlined button--small" :disabled="isActive(report)" @click="requestAction(report, 'dismiss')">
-                <Icon name="material-symbols:block" size="18" /> 驳回举报
+                <Icon name="material-symbols:block" size="18" /> {{ t('admin.dismiss') }}
               </button>
               <button v-if="canHide(report)" type="button" class="button button--danger button--small" :disabled="isActive(report)" @click="requestAction(report, 'hide')">
-                <Icon name="material-symbols:visibility-off-outline" size="18" /> 隐藏{{ report.targetType === 'theme' ? '主题' : '评论' }}
+                <Icon name="material-symbols:visibility-off-outline" size="18" /> {{ t('admin.hideTarget', { target: report.targetType === 'theme' ? t('report.theme') : t('report.comment') }) }}
               </button>
             </template>
             <button v-if="canRestore(report)" type="button" class="button button--tonal button--small" :disabled="isActive(report)" @click="requestAction(report, 'restore')">
-              <Icon name="material-symbols:visibility-outline" size="18" /> 恢复公开
+              <Icon name="material-symbols:visibility-outline" size="18" /> {{ t('admin.restorePublic') }}
             </button>
           </footer>
         </article>
       </div>
 
-      <nav v-if="cursor || data.nextCursor" class="report-pagination" aria-label="举报分页">
+      <nav v-if="cursor || data.nextCursor" class="report-pagination" :aria-label="t('admin.pagination')">
         <button v-if="cursor" type="button" class="button button--outlined" @click="$router.back()">
-          <Icon name="material-symbols:arrow-back" size="19" /> 上一页
+          <Icon name="material-symbols:arrow-back" size="19" /> {{ t('common.previous') }}
         </button>
         <NuxtLink v-if="data.nextCursor" :to="{ query: queryWithCursor(data.nextCursor) }" class="button button--tonal">
-          下一页 <Icon name="material-symbols:arrow-forward" size="19" />
+          {{ t('common.next') }} <Icon name="material-symbols:arrow-forward" size="19" />
         </NuxtLink>
       </nav>
 
@@ -336,7 +340,7 @@ function queryWithCursor(value?: string): Record<string, string> {
         </p>
         <p v-if="dialogError" class="dialog-error" role="alert">{{ dialogError }}</p>
         <template #actions>
-          <button type="button" class="button button--text" :disabled="activeAction !== null" @click="confirmationOpen = false">取消</button>
+          <button type="button" class="button button--text" :disabled="activeAction !== null" @click="confirmationOpen = false">{{ t('common.cancel') }}</button>
           <button
             type="button"
             class="button"
@@ -345,7 +349,7 @@ function queryWithCursor(value?: string): Record<string, string> {
             @click="confirmAction"
           >
             <Icon :name="confirmationAction === 'hide' ? 'material-symbols:visibility-off-outline' : 'material-symbols:visibility-outline'" size="18" />
-            {{ activeAction ? '正在提交…' : confirmationAction === 'hide' ? '确认隐藏' : '确认恢复' }}
+            {{ activeAction ? t('admin.submitting') : confirmationAction === 'hide' ? t('admin.confirmHide') : t('admin.confirmRestore') }}
           </button>
         </template>
       </AppDialog>
