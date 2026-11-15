@@ -1,7 +1,14 @@
 import { createError, type H3Event } from 'h3'
 
+let cachedEnv: Env | undefined
+
+export function cacheCloudflareEnv(env: Env): void {
+  cachedEnv = env
+}
+
 export function getCloudflareEnv(event: H3Event): Env {
-  const env = event.context.cloudflare?.env as unknown as Env | undefined
+  // 内部 $fetch 生成的新事件不会携带 Pages 注入的 cloudflare 上下文，复用同一 isolate 已捕获的绑定。
+  const env = (event.context.cloudflare?.env as unknown as Env | undefined) ?? cachedEnv
 
   if (!env) {
     throw createError({
