@@ -13,6 +13,7 @@
     "lint": "eslint .",
     "typecheck": "nuxt typecheck",
     "test": "vitest run",
+    "theme:validator": "node scripts/generate-theme-validator.mjs",
     "cf:typegen": "wrangler types"
   },
   "dependencies": {

@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { compareVersions, normalizeVersion, parseVersion } from '../../shared/theme/version'
 import { localizedText, ThemeValidationError, validateThemeManifest } from '../../shared/theme/validator'
@@ -50,5 +51,11 @@ describe('manifest validation', () => {
     expect(localizedText({ en: 'Ocean', 'zh-CN': '海洋' })).toBe('海洋')
     expect(localizedText({ default: 'Default', en: 'English' })).toBe('English')
     expect(localizedText({ fr: 'Mer' })).toBe('Mer')
+  })
+
+  it('ships a precompiled validator that avoids runtime code generation', () => {
+    const source = readFileSync(new URL('../../shared/theme/theme-validator.generated.ts', import.meta.url), 'utf8')
+    expect(source).not.toContain('new Function')
+    expect(source).toMatch(/export default validate\d+/)
   })
 })

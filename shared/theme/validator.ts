@@ -1,5 +1,5 @@
-import Ajv, { type ErrorObject, type ValidateFunction } from 'ajv'
-import schema from './theme.schema.json'
+import type { ErrorObject, ValidateFunction } from 'ajv'
+import generatedValidate from './theme-validator.generated'
 import { normalizeVersion } from './version'
 import type { NormalizedThemeManifest, ThemeManifest, ThemeValidationIssue } from './types'
 
@@ -15,8 +15,8 @@ export class ThemeValidationError extends Error {
   }
 }
 
-const ajv = new Ajv({ allErrors: true, strict: true })
-const validateSchema = ajv.compile<ThemeManifest>(schema) as ValidateFunction<ThemeManifest>
+// Cloudflare Workers 禁止运行时 new Function，校验器由 theme.schema.json 在构建期预编译。
+const validateSchema = generatedValidate as unknown as ValidateFunction<ThemeManifest>
 
 export function validateThemeManifest(input: unknown): NormalizedThemeManifest {
   if (!validateSchema(input)) {

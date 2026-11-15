@@ -97,6 +97,7 @@ npm run build
 - 类型定义：`shared/theme/types.ts`
 - 校验入口：`shared/theme/validator.ts`
 - 包级限制：`server/utils/theme-archive.ts`
+- 预编译校验器：`shared/theme/theme-validator.generated.ts`，修改 `theme.schema.json` 后运行 `npm run theme:validator` 重新生成，不要手工编辑。
 
 上游更新主题 Schema 时，请同步上述文件并补充 `tests/unit/` 中的对应测试，确保社区与 App 对同一主题包的判断一致。指南页面 `app/pages/guide.vue` 中的限制数值也需一并核对。
 
